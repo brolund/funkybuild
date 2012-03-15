@@ -1,2 +1,4 @@
 .DS_Store
 classes
+*.class
+bin
