@@ -39,7 +39,7 @@ var ls = function(response) {
 
 
 http.createServer(function(request, response) {
-    var params = getQueryParameters(request);
+    //var params = getQueryParameters(request);
 	// ls(response);	
     response.writeHead(200, {
         'Content-Type': 'text/plain'
