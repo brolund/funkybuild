@@ -2,3 +2,5 @@
 classes
 *.class
 bin
+node_modules
+

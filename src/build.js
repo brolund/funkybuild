@@ -1,6 +1,8 @@
 var util  = require('util'),
     spawn = require('child_process').spawn;
 var fs = require('fs');
+var _ = require('underscore');
+var async = require('async');
 
 var outErrProcess = function(proc, out, err) {
 }
@@ -52,13 +54,16 @@ var classes = function(proj) {
 var build = function(solution) {
 	var res = {};
 	console.log("Executing...");
-	res.val = solution.classes(res)
+	for(var key in solution) {
+		res.val = solution[key](res);
+	}
 	console.log("Done executing.");
 }
 
 //////////////////////////////////
 var config = {
-	'classes': classes(std('javaroot'))
+	'classes': classes(std('javaroot')),
+	'classes2': classes(std('javaroot'))
 }
 
 build(config)
