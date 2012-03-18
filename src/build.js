@@ -8,8 +8,11 @@ var outErrProcess = function(proc, out, err) {
 var javac = function(src, bin, callback) {
 	console.log("Doing javac");
 	fs.mkdirSync(bin);
-	var javac = spawn('javac', ['-d', bin, src]);
-	console.log(javac);
+	var args = ['-d', bin ];
+	var files = fs.readdirSync(src);
+	for(var i=0;i<files.length;i++) {args.push(src + files[i]);}
+	var javac = spawn('javac', args);
+	console.log(args);
 	
 	javac.stdout.on('data', function (data) {
 	    console.log(data);
@@ -30,7 +33,7 @@ var std = function(dir) {
 	console.log("Creating std fn");
 	return function(callback) {
 		return {
-			src: dir + "/src/main/java/Hello.java",
+			src: dir + "/src/main/java/",
 			bin: dir + "/bin"
 		}
 	};
@@ -46,8 +49,6 @@ var classes = function(proj) {
 	};
 }
 
-
-
 var build = function(solution) {
 	var res = {};
 	console.log("Executing...");
@@ -56,7 +57,6 @@ var build = function(solution) {
 }
 
 //////////////////////////////////
-
 var config = {
 	'classes': classes(std('javaroot'))
 }
