@@ -5,6 +5,12 @@ var path = require('path');
 var _ = require('underscore');
 var async = require('async');
 
+var ser = async.series;
+var par = async.parallel;
+var auto = async.auto;
+
+var builddir = 'javaroot/bin/';
+
 var Cmd = function(cmd, dir, argArray) {
 	var res = {};
 	res.cmd = cmd;
@@ -45,14 +51,26 @@ var mkdir = function(dir) {
 	}	
 }
 
-var javac = function(src, bin, lib, callback) {
+var mergeClasspaths = function(classes, libs) {
+	var cp = classes.length > 0 ? classes.join(':') : '';
+	cp += cp.length>0 && libs.length>0? ':':'';
+	cp += libs.length>0 ? libs.join(':'):'';
+	console.log('cp:' + cp);
+	return cp;
+}
+
+var javac = function(src, classes, libs, callback) {
     console.log("Doing javac");
+	var bin = builddir + src.replace(new RegExp('\/', 'g'),'_');
     mkdir(bin);
     var args = ['-d', bin];
-    if (lib.length > 0) {
-        args.push('-cp');
-        args.push(lib.join(':'));
+	var cp = mergeClasspaths(classes, libs);
+	
+    if (cp.length > 0) {
+	    args.push('-cp');
+		args.push(cp);
     }
+	
     var files = fs.readdirSync(src);
     for (var i = 0; i < files.length; i++) {
         args.push(src + files[i]);
@@ -60,66 +78,68 @@ var javac = function(src, bin, lib, callback) {
     console.log(args)
     runCmd(Cmd('javac', '.', args), function(exitcode) {
         console.log('Compilation done: ' + exitcode);
-        callback(bin);
+        callback(null, bin);
     });
 }
 
 var std = function(dir) {
-	console.log("Creating std fn");
+	console.log("Creating function for standard project");
 	return function(callback) {
-		return {
+		var p = {
 			src: dir + "/src/main/java/",
 			test: dir + "/src/test/java/",
 			testbin: dir + "/bin/test-classes/",
 			bin: dir + "/bin/classes/",
 			testlib: ['/Users/danielbrolund/.m2/repository/junit/junit/4.8.2/junit-4.8.2.jar']
 		}
+		console.log("Returning standard project object for " + dir);
+		console.log(p);
+		callback(null, p);
 	};
 }
 
-var classes = function(proj) {
-	console.log("Creating classes");
-	
-	return function(callback) {
-		var p = proj(callback);
-		console.log(p);
-		javac(p.src, p.bin, callback);
-	};
-}
 
-var test = function(proj) {
-	console.log("Testing");
-	
-	return function(callback) {
-		var p = proj(callback);
-		console.log(p);
-		javac(p.src, p.bin, [], function(code) {
-			var lib = p.testlib.slice();
-			lib.push(code);
-			javac(p.test, p.testbin, lib, function(bin) {				
-				lib.push(p.testbin);
-				runCmd(Cmd('java', '.', ['-cp', lib.join(':'),'org.junit.runner.JUnitCore','TestHello']),
-					function(res) {console.log('========Testing done========');});
+var runTests = function(classdirs, libs, test, cb) {				
+	var cp = [];
+	cp.push(classdirs);
+	cp.push(libs);
+	runCmd(Cmd('java', '.', ['-cp', mergeClasspaths(classdirs, libs),'org.junit.runner.JUnitCore',test]),
+		function(exitcode) {
+				console.log('========Testing done exitcode: " + exitcode + "======== ');
+				cb(null, exitcode);
 			});
-			
-		});
-	};
 }
 
-
-var build = function(solution) {
-	var res = {};
-	for(var key in solution) {
-		res.val = solution[key](res);
-	}
-}
 
 /////////////////////////////////
+var src = ['_proj', function(cb, res) {
+		console.log(res._proj.src);
+		cb(null, res._proj.src);
+	}];
+var testsrc = ['_proj', function(cb, res) {
+		console.log(res._proj.test);
+		cb(null, res._proj.test)
+	}];
+var testlib = ['_proj', function(cb, res) {
+		console.log(res._proj.testlib);
+		cb(null, res._proj.testlib)
+	}];
 
-var config = {
-	'test': test(std('javaroot'))
-}
-
-build(config)
-
-//runCmd(Cmd('ls', './javaroot', ['-R']), function(o) {console.log(o);});
+var tutti = auto({
+	_proj: std('javaroot'),
+	_src: src,
+	_testsrc: testsrc,
+	_testlib: testlib,	
+	_classes: ['_src', function(cb, res) {javac(res._src,[],[],cb);}],
+	_testclasses: ['_testsrc', '_classes', '_testlib', function(cb, res) {javac(res._testsrc,[res._classes],res._testlib,cb)}],
+	_testresult: ['_classes', '_testclasses', '_testlib', function(cb, res) {runTests([res._classes,res._testclasses],res._testlib,'TestHello',cb);}]
+},function(err, res) {
+	console.log("Error");
+	console.log(err);
+	console.log("Results");
+	console.log(res);
+	runCmd(Cmd('java', '.', ['-cp', mergeClasspaths([res._classes], []), 'Hello']),
+		function(err, exitcode) {
+			console.log(exitcode);
+		});
+});
