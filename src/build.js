@@ -83,27 +83,13 @@ var javac = function(src, classes, libs, callback) {
     });
 }
 
-var std = function(dir) {
-	console.log("Creating function for standard project");
+var fn = function(val) {
 	return function(callback) {
-		var p = {
-			src: dir + "/src/main/java/",
-			test: dir + "/src/test/java/",
-			testbin: dir + "/bin/test-classes/",
-			bin: dir + "/bin/classes/",
-			testlib: [mavenrepo + 'junit/junit/4.8.2/junit-4.8.2.jar']
-		}
-		console.log("Returning standard project object for " + dir);
-		console.log(p);
-		callback(null, p);
+		callback(null, val);
 	};
 }
 
-
 var runTests = function(classdirs, libs, test, cb) {				
-	var cp = [];
-	cp.push(classdirs);
-	cp.push(libs);
 	runCmd(Cmd('java', '.', ['-cp', mergeClasspaths(classdirs, libs),'org.junit.runner.JUnitCore',test]),
 		function(exitcode) {
 				console.log('========Testing done exitcode: " + exitcode + "======== ');
@@ -111,36 +97,48 @@ var runTests = function(classdirs, libs, test, cb) {
 			});
 }
 
+var std = function(dir, deps) {
+	console.log("Creating function for standard project");
+	var full = function(localdir) {
+		return dir + "." + localdir
+	}
+	var p = {};	
+	p[full('src')]=fn(dir + "/src/main/java/");
+	p[full('libs')]=fn([]);
+	p[full('bin')]=[full('src'), function(cb, res) {javac(res[full('src')],[],[],cb);}];
+	p[full('test')]=fn(dir + "/src/test/java/");
+	p[full('testlibs')]=fn([mavenrepo + 'junit/junit/4.8.2/junit-4.8.2.jar']);
+	p[full('testbin')]=[full('test'), full('bin'), full('testlibs'), 
+			function(cb, res) {
+				javac(res[full('test')],[res[full('bin')]],[res[full('testlibs')]],cb);
+			}];
+	p[full('unittestresult')]=[full('bin'), full('testbin'), full('testlibs'), 
+			function(cb, res) {
+				runTests([res[full('bin')],res[full('testbin')]],res[full('testlibs')],'TestHello',cb);
+			}];
+	
+	console.log("Returning standard project object for " + dir);
+	console.log(p);
+	return p;
+}
 
 /////////////////////////////////
-var src = ['_proj', function(cb, res) {
-		console.log(res._proj.src);
-		cb(null, res._proj.src);
-	}];
-var testsrc = ['_proj', function(cb, res) {
-		console.log(res._proj.test);
-		cb(null, res._proj.test)
-	}];
-var testlib = ['_proj', function(cb, res) {
-		console.log(res._proj.testlib);
-		cb(null, res._proj.testlib)
-	}];
 
-var tutti = auto({
-	_proj: std('javaroot'),
-	_src: src,
-	_testsrc: testsrc,
-	_testlib: testlib,	
-	_classes: ['_src', function(cb, res) {javac(res._src,[],[],cb);}],
-	_testclasses: ['_testsrc', '_classes', '_testlib', function(cb, res) {javac(res._testsrc,[res._classes],res._testlib,cb)}],
-	_testresult: ['_classes', '_testclasses', '_testlib', function(cb, res) {runTests([res._classes,res._testclasses],res._testlib,'TestHello',cb);}]
-},function(err, res) {
-	console.log("Error");
-	console.log(err);
-	console.log("Results");
-	console.log(res);
-	runCmd(Cmd('java', '.', ['-cp', mergeClasspaths([res._classes], []), 'Hello']),
-		function(err, exitcode) {
-			console.log(exitcode);
-		});
-});
+var project = std('javaroot');
+
+auto(project,
+	function(err, res) {
+		if(err) {
+			console.log("Error");
+			console.log(err);
+		} else {
+			console.log("Results");
+			console.log(res);
+			runCmd(Cmd('java', '.', ['-cp', res['javaroot.bin'], 'Hello']),
+				function(err, exitcode) {
+					console.log(exitcode);
+				});
+			
+		}
+	});
+
