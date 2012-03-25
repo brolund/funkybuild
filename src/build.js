@@ -10,6 +10,7 @@ var par = async.parallel;
 var auto = async.auto;
 
 var builddir = 'javaroot/bin/';
+var mavenrepo = '/Users/danielbrolund/.m2/repository/'
 
 var Cmd = function(cmd, dir, argArray) {
 	var res = {};
@@ -90,7 +91,7 @@ var std = function(dir) {
 			test: dir + "/src/test/java/",
 			testbin: dir + "/bin/test-classes/",
 			bin: dir + "/bin/classes/",
-			testlib: ['/Users/danielbrolund/.m2/repository/junit/junit/4.8.2/junit-4.8.2.jar']
+			testlib: [mavenrepo + 'junit/junit/4.8.2/junit-4.8.2.jar']
 		}
 		console.log("Returning standard project object for " + dir);
 		console.log(p);
