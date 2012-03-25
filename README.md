@@ -29,10 +29,22 @@ Unlike side effects based build systems, this allows for seamless parallelizatio
 
 NOTE: Exactly how to declare the graph in a user friendly way and how to do this for multi-projects is unclear at the moment.
 
+
 Roadmap
 -------
 
-There are loads of things to do.
+Initially, the focus will be on building Java-projects. This should provide sufficient challenges to get the basic build and dependency mechanisms in place, as well as an idea on how to structure the code. 
+
+After that, more languages, polyglotting projects, visualizing builds, distributed builds, making FunkyBuild a CI server, total world domination, making FunkyBuild user friendly (not necessarily in that order).
+
+As you understand, there are loads of things to do:
+
+- Internalize asynch mechanism (a.t.m. asyncjs)
+- Using libraries
+	- Local
+	- Maven
+- Multi project support
+
 
 
 
