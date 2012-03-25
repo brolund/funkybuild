@@ -92,7 +92,7 @@ var fn = function(val) {
 var runTests = function(classdirs, libs, test, cb) {				
 	runCmd(Cmd('java', '.', ['-cp', mergeClasspaths(classdirs, libs),'org.junit.runner.JUnitCore',test]),
 		function(exitcode) {
-				console.log('========Testing done exitcode: " + exitcode + "======== ');
+				console.log('======== Testing done. Exitcode: ' + exitcode + ' ======== ');
 				cb(null, exitcode);
 			});
 }

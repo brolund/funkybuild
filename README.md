@@ -48,6 +48,7 @@ As you understand, there are loads of things to do:
 	- Maven integration
 	- Ivy integration
 - Multi (Java) project support
+- Create mechanism for async execution that allows for 'fat' declaration, but only execute selected outputs (i.e. replace async)
 - Build output
 	- err/out
 	- Keeping track of what is being built
@@ -56,6 +57,7 @@ As you understand, there are loads of things to do:
 	- SVN
 	- Mercurial
 - Visualization of the build process
+- Seamless distribution
 - Building a CI server on top of FunkyBuild
 	- Web server for build status
 	- Live visualization of build progress
