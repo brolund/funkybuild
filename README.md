@@ -23,7 +23,7 @@ Architectural idea
 
 The architectural idea (which admittedly is very coarse at the moment) is to build asynchronous /funklets/ that perform build steps. 
 Every funklet takes a few named inputs, and provides one named output.
-These funklets can be combined in a unidirectional graph where inputs and outputs are declaratively chained. 
+These funklets can be combined in a unidirectional graph where inputs and outputs are implicitly chained. 
 The graph is resolved by FunkyBuild, and the build is performed asynchronously as new inputs are available for the next build steps.
 
 Unlike side effects based build systems, this allows for seamless parallelization and distribution of computations.
