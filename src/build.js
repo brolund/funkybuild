@@ -103,7 +103,7 @@ var std = function(rootdir, dir, deps) {
 	var nom = function(localdir) {
 		return dir + "." + localdir
 	}
-	var p = {};	
+	var p = {};
 	p[nom('src')]=fn(path.join(rootdir, dir,"/src/main/java/"));
 	p[nom('libs')]=fn([]);
 	p[nom('bin')]=[nom('src'), function(cb, res) {javac(res[nom('src')],[],[],cb);}];
@@ -123,11 +123,25 @@ var std = function(rootdir, dir, deps) {
 	return p;
 }
 
+var merge = function(o1, o2, o3, etc) {
+	var merged = {};
+	for(o in arguments) {
+		var arg = arguments[o];
+		for(p in arg) {
+			merged[p] = arg[p];
+		}
+	}
+	console.log(merged);
+	return merged;
+}
+
 /////////////////////////////////
 
 var project = std('javaroot', 'mainproj');
 
-auto(project,
+var subproj = std('javaroot', 'subproj');
+
+auto(merge(project, subproj),
 	function(err, res) {
 		if(err) {
 			console.log("Error");
