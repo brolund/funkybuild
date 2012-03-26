@@ -99,6 +99,7 @@ var runTests = function(classdirs, libs, test, cb) {
 
 var std = function(dir, deps) {
 	console.log("Creating function for standard project");
+	
 	var full = function(localdir) {
 		return dir + "." + localdir
 	}
@@ -125,7 +126,6 @@ var std = function(dir, deps) {
 /////////////////////////////////
 
 var project = std('javaroot');
-
 auto(project,
 	function(err, res) {
 		if(err) {
