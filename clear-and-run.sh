@@ -1,1 +1,1 @@
-rm -rf javaroot/bin/  && ls -R javaroot && node src/build.js
+rm -rf build  && ls -R javaroot && node src/build.js

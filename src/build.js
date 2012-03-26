@@ -9,7 +9,7 @@ var ser = async.series;
 var par = async.parallel;
 var auto = async.auto;
 
-var builddir = 'javaroot/bin/';
+var builddir = 'build/';
 var mavenrepo = '/Users/danielbrolund/.m2/repository/'
 
 var Cmd = function(cmd, dir, argArray) {
@@ -61,8 +61,8 @@ var mergeClasspaths = function(classes, libs) {
 }
 
 var javac = function(src, classes, libs, callback) {
-    console.log("Doing javac");
-	var bin = builddir + src.replace(new RegExp('\/', 'g'),'_');
+    console.log("Doing javac for " + src);
+	var bin = path.join(builddir, src.replace(new RegExp('\/', 'g'),'_'));
     mkdir(bin);
     var args = ['-d', bin];
 	var cp = mergeClasspaths(classes, libs);
@@ -97,25 +97,25 @@ var runTests = function(classdirs, libs, test, cb) {
 			});
 }
 
-var std = function(dir, deps) {
+var std = function(rootdir, dir, deps) {
 	console.log("Creating function for standard project");
 	
-	var full = function(localdir) {
+	var nom = function(localdir) {
 		return dir + "." + localdir
 	}
 	var p = {};	
-	p[full('src')]=fn(dir + "/src/main/java/");
-	p[full('libs')]=fn([]);
-	p[full('bin')]=[full('src'), function(cb, res) {javac(res[full('src')],[],[],cb);}];
-	p[full('test')]=fn(dir + "/src/test/java/");
-	p[full('testlibs')]=fn([mavenrepo + 'junit/junit/4.8.2/junit-4.8.2.jar']);
-	p[full('testbin')]=[full('test'), full('bin'), full('testlibs'), 
+	p[nom('src')]=fn(path.join(rootdir, dir,"/src/main/java/"));
+	p[nom('libs')]=fn([]);
+	p[nom('bin')]=[nom('src'), function(cb, res) {javac(res[nom('src')],[],[],cb);}];
+	p[nom('test')]=fn(path.join(rootdir, dir, "/src/test/java/"));
+	p[nom('testlibs')]=fn([mavenrepo + 'junit/junit/4.8.2/junit-4.8.2.jar']);
+	p[nom('testbin')]=[nom('test'), nom('bin'), nom('testlibs'), 
 			function(cb, res) {
-				javac(res[full('test')],[res[full('bin')]],[res[full('testlibs')]],cb);
+				javac(res[nom('test')],[res[nom('bin')]],[res[nom('testlibs')]],cb);
 			}];
-	p[full('unittestresult')]=[full('bin'), full('testbin'), full('testlibs'), 
+	p[nom('unittestresult')]=[nom('bin'), nom('testbin'), nom('testlibs'), 
 			function(cb, res) {
-				runTests([res[full('bin')],res[full('testbin')]],res[full('testlibs')],'TestHello',cb);
+				runTests([res[nom('bin')],res[nom('testbin')]],res[nom('testlibs')],'TestHello',cb);
 			}];
 	
 	console.log("Returning standard project object for " + dir);
@@ -125,7 +125,8 @@ var std = function(dir, deps) {
 
 /////////////////////////////////
 
-var project = std('javaroot');
+var project = std('javaroot', 'mainproj');
+
 auto(project,
 	function(err, res) {
 		if(err) {
@@ -134,11 +135,12 @@ auto(project,
 		} else {
 			console.log("Results");
 			console.log(res);
-			runCmd(Cmd('java', '.', ['-cp', res['javaroot.bin'], 'Hello']),
+			runCmd(Cmd('java', '.', ['-cp', res['mainproj.bin'], 'Hello']),
 				function(err, exitcode) {
 					console.log(exitcode);
 				});
 			
 		}
+		process.chdir('./..');
 	});
 
