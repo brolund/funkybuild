@@ -138,7 +138,6 @@ var merge = function(o1, o2, o3, etc, aso) {
 /////////////////////////////////
 
 var project = std('javaroot', 'mainproj', ['subproj']);
-
 var subproj = std('javaroot', 'subproj');
 
 auto(merge(project, subproj),
