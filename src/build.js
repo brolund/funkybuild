@@ -123,7 +123,7 @@ var std = function(rootdir, dir, deps) {
 	return p;
 }
 
-var merge = function(o1, o2, o3, etc) {
+var merge = function(o1, o2, o3, etc, aso) {
 	var merged = {};
 	for(o in arguments) {
 		var arg = arguments[o];
@@ -137,7 +137,7 @@ var merge = function(o1, o2, o3, etc) {
 
 /////////////////////////////////
 
-var project = std('javaroot', 'mainproj');
+var project = std('javaroot', 'mainproj', ['subproj']);
 
 var subproj = std('javaroot', 'subproj');
 
