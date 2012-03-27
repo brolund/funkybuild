@@ -1,10 +1,10 @@
-package mainprojpackage;
+package subprojpackage;
 
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class TestHello {
+public class TestHellosDependency {
 
 	@Test
 	public void testHello() {		
