@@ -1,26 +1,24 @@
-var util  = require('util');
-var spawn = require('child_process').spawn;
-var fs = require('fs');
-var path = require('path');
-var _ = require('underscore');
 var async = require('async');
+var _ = require('underscore');
 
-var j  = require('java');
+var j  = require('./java');
+var fb  = require('./funkybuild');
 
-var ser = async.series;
-var par = async.parallel;
-var auto = async.auto;
+var utils = require('./utils');
+var Cmd = utils.Cmd;
+var runCmd = utils.runCmd;
 
-var builddir = 'build/';
-var mavenrepo = '/Users/danielbrolund/.m2/repository/'
+var merge = utils.merge;
+
+
 
 
 /////////////////////////////////
 
-var project = std('javaroot', 'mainproj', ['subproj']);
-var subproj = std('javaroot', 'subproj');
+var project = fb.std('javaroot', 'mainproj', ['subproj']);
+var subproj = fb.std('javaroot', 'subproj');
 
-auto(merge(project, subproj),
+async.auto(merge(project, subproj),
 	function(err, res) {
 		if(err) {
 			console.log("########## Error");
