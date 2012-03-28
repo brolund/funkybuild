@@ -10,9 +10,6 @@ var runCmd = utils.runCmd;
 
 var merge = utils.merge;
 
-
-
-
 /////////////////////////////////
 
 var project = fb.std('javaroot', 'mainproj', ['subproj']);
