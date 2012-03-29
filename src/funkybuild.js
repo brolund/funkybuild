@@ -32,7 +32,6 @@
 		var tests = _.map(_.filter(walk(testdir), j.isJavaClass), j.toClassName).join(' ');
 		runCmd(Cmd('java', '.', ['-cp', j.mergeClasspaths(classdirs, libs),'org.junit.runner.JUnitCore',tests]),
 			function(exitcode) {
-					console.log('======== Tested done ' + testdir + '  Exitcode: ' + exitcode + ' ======== ');
 					cb(null, exitcode);
 				});
 	}

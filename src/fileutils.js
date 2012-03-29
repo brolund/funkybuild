@@ -30,7 +30,6 @@
 
 	fu.mkdir = function(dir) {
 		dir = path.normalize(dir);
-		console.log("---- mkdir " + dir);
 		var dirs = dir.split('/');
 		var currDir = ".";
 		for(var i=0;i<dirs.length;i++) {
