@@ -33,7 +33,6 @@
 	}
 
 	j.javac = function(src, classes, libs, callback) {
-		console.log("---- Doing javac for " + src);
 		var bin = path.join(builddir, replaceAll(src, '\/', '_'));
 		mkdir(bin);
 		var args = ['-d', bin];
@@ -49,7 +48,6 @@
 			args.push(src + files[i]);
 		}
 		runCmd(Cmd('javac', '.', args), function(exitcode) {
-			console.log('---- Compilation done: ' + exitcode + " returning " + bin);
 			callback(null, bin);
 		});
 	}

@@ -41,6 +41,7 @@
 	}
 
 	utils.runCmd = function(cmd, callback) {
+		console.log('===============================================');
 		console.log('---- Running cmd:');
 		console.log(cmd);
 
