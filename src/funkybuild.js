@@ -41,26 +41,29 @@
 		async.auto(fb.graph,
 		function(err, res) {
 			if(err) {
-				console.log("########## Error");
-				console.trace("Here I am!")
-				console.log(err);
-				console.log(res);
+				console.error("########## Error");
+				console.error(err);
+				console.trace("This is where the error was:")
 			} else {
 				console.log("---- Results");
 				console.log(res);
-				/*runCmd(Cmd('java', '.', ['-cp', _.union(res['mainproj.bin'], res['subproj.bin']).join(':'), 'mainprojpackage.Hello']),
-				function(err, exitcode) {
-					console.log(exitcode);
-				});*/
 			}
 		});
 	}	
 	
 	fb.run = function(project, mainClass) {
+		T('Result of ' + mainClass, 
+			function(cb, res) {
+				runCmd(Cmd('java', '.', ['-cp', _.union(res[project + '.bin'], res[project + '.libs']).join(':'), mainClass]),
+				function(exitcode) {
+					cb(null, exitcode);
+				})}, 
+				[project + '.bin', project + '.libs']);
 		
 	}
 
 	fb.std = function(rootdir, dir, deps) {
+		console.log("---- Creating std project for " + rootdir + "/" + dir);
 		var nom = function(localdir) {
 			return dir + "." + localdir
 		}
@@ -93,8 +96,6 @@
 					runTests(res[nom('testbin')], _.union(res[nom('testbin')], res[nom('bin')]),_.union(res[nom('testlibs')], res[nom('libs')]),cb);
 				}, [nom('testbin'), nom('bin'), nom('testlibs'), nom('libs')]);
 	
-		console.log("---- Returning standard project object for " + dir);
-		console.log(fb.graph);
 		return fb.graph;
 	};
 }());
