@@ -1,7 +1,7 @@
 var funky  = require('./funkybuild');
 var mvn  = require('./maven');
 
-fb.downloadWith(mvn.downloader);
+funky.downloadWith(mvn.downloader);
 
 /////////////////////////////////
 
