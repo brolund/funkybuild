@@ -19,12 +19,18 @@
 	var Cmd = utils.Cmd;
 	var runCmd = utils.runCmd;
 	
-	var mavenrepo = '/Users/danielbrolund/.m2/repository/';
 	
 	fb.graph = {};
 	
+	fb.downloader = function() {
+		throw 'No downloader configured. Configure with e.g. fb.downloadWith(mvn.downloader)';
+	};
+	
 	fb.T = function(o, f, i) {
 		fb.graph[o] = _.union(i, f);
+	}
+	fb.downloadWith = function(downloader) {
+		fb.downloader = downloader;
 	}
 	var T = fb.T;
 	
@@ -61,10 +67,21 @@
 		
 	}
 
-	fb.std = function(rootdir, dir, deps) {
-		console.log("---- Creating std project for " + rootdir + "/" + dir);
+	fb.std = function(config) {
+		console.log("---- Creating std project for " + config);
+		var rootdir = config.root;
+		var dir = config.project;
+		var deps = config.projectdeps;
+		var testlibs = config.testlibs;
+		
 		var nom = function(localdir) {
 			return dir + "." + localdir
+		}
+		var repo = function(id) {
+			return "repo|" + id;
+		}
+		for(i in testlibs) {
+			T(repo(testlibs[i]), fn(fb.downloader(testlibs[i])), []);
 		}
 		T(nom('src'), fn(path.join(rootdir, dir,"/src/main/java/")), []);
 		var dependencies = deps&&deps.length>0
@@ -84,7 +101,9 @@
 		T(nom('libs'), depFunc, dependencies);
 		T(nom('bin'), function(cb, res) {javac(res[nom('src')],[],res[nom('libs')],cb);}, [nom('src'), nom('libs')]);
 		T(nom('test'), fn(path.join(rootdir, dir, "/src/test/java/")), []);
-		T(nom('testlibs'), fn([mavenrepo + 'junit/junit/4.8.2/junit-4.8.2.jar']), []);
+		T(nom('testlibs'), 
+			function(cb, res){cb(null, _.map(testlibs, function(lib){return res[repo(lib)]} ));},
+		 	_.map(testlibs, function(lib){return repo(lib)} ));
 		
 		T(nom('testbin'),  
 				function(cb, res) {
