@@ -81,7 +81,7 @@
 			return "repo|" + id;
 		}
 		for(i in testlibs) {
-			T(repo(testlibs[i]), fn(fb.downloader(testlibs[i])), []);
+			T(repo(testlibs[i]), function(cb, res){cb(null, fb.downloader(testlibs[i]));}, []);
 		}
 		T(nom('src'), fn(path.join(rootdir, dir,"/src/main/java/")), []);
 		var dependencies = deps&&deps.length>0
