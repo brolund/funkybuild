@@ -4,6 +4,7 @@
 
 	var path = require('path');
 	var fs = require('fs');
+	var us = require('./utils');
 
 	var isDir = function(fsobj) {
 		return fs.statSync(fsobj).isDirectory();
@@ -28,13 +29,16 @@
 		return innerWalk(directory,"", []);
 	};
 
-	fu.mkdir = function(dir) {
-		dir = path.normalize(dir);
+	fu.mkdir = function(dire) {
+		var dir = path.normalize(dire);
+		console.log('making dir ' + dir);
 		var dirs = dir.split('/');
-		var currDir = ".";
+		var currDir = us.startsWith(dire, '/')?'/':'./';
+		
 		for(var i=0;i<dirs.length;i++) {
-			currDir = currDir + '/' + dirs[i];
+			currDir = path.join(currDir, dirs[i]);
 			if(!path.existsSync(currDir) && dirs[i].length>0) {
+				console.log('Making ' + currDir);
 				fs.mkdirSync(currDir);
 			};
 		}	

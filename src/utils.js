@@ -13,6 +13,10 @@
 		return str.indexOf(suffix, str.length - suffix.length) !== -1;
 	}
 
+	utils.startsWith = function(str, prefix) {
+		return str.indexOf(prefix) == 0;
+	}
+
 	utils.merge = function(o1, o2, o3, etc, aso) {
 		var merged = {};
 		for(o in arguments) {

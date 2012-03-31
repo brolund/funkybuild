@@ -5,7 +5,7 @@ funky.downloadWith(notmvn.downloader);
 
 /////////////////////////////////
 
-var junit = 'junit:junit:4.8.2';
+var junit = {org:'junit', item:'junit', ver:'4.8.2', type:'jar'};
 
 funky.std({root:'javaroot', project:'mainproj', projectdeps:['subproj'], testlibs:[junit]});
 funky.std({root:'javaroot', project:'subproj', testlibs:[junit]});
