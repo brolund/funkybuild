@@ -3,6 +3,7 @@
 	module.exports = j;
 
 	var path = require('path');
+	var _ = require('underscore');
 	var utils = require('./utils');
 	var replaceAll = utils.replaceAll;
 	var endsWith = utils.endsWith;
@@ -36,12 +37,10 @@
 		var bin = path.join(builddir, replaceAll(src, '\/', '_'));
 		mkdir(bin);
 		var args = ['-d', bin];
-		var cp = j.mergeClasspaths(classes, libs);
 
-		if (cp.length > 0) {
-			args.push('-cp');
-			args.push(cp);
-		}
+		var cp = _.flatten([classes,libs]).join(':');
+		args.push('-cp');
+		args.push(cp);
 
 		var files = walk(src);
 		for (var i = 0; i < files.length; i++) {

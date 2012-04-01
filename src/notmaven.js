@@ -7,8 +7,8 @@
 	var http = require('http');
 	var fileutils = require('./fileutils');
 	
-	mvn.localrepo = '/Users/danielbrolund/.m2/funkyrepo/';
-	mvn.mavenrepo = {host:'localhost', port:8000, path:'/'};
+	mvn.localrepo = process.env.HOME + '/.m2/funkyrepo/';
+	mvn.mavenrepo = {host:'mirrors.ibiblio.org', port:80, path:'/maven2/'};
 
 	mvn.downloader = function(dep) {
 		console.log('Downloading');

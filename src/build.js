@@ -1,6 +1,8 @@
 var funky  = require('./funkybuild');
 var notmvn  = require('./notmaven');
 
+notmvn.mavenrepo = {host:'localhost', port:8000, path:'/'};
+
 funky.downloadWith(notmvn.downloader);
 
 /////////////////////////////////
