@@ -59,21 +59,23 @@
 	fb.run = function(project, mainClass) {
 		T('Result of ' + mainClass, 
 			function(cb, res) {
-				runCmd(Cmd('java', '.', ['-cp', _.union(res[project + '.bin'], res[project + '.libs']).join(':'), mainClass]),
+				runCmd(Cmd('java', '.', ['-cp', _.union(res[project + '.bin'], res[project + '.projectdeps']).join(':'), mainClass]),
 				function(exitcode) {
 					cb(null, exitcode);
 				})}, 
-				[project + '.bin', project + '.libs']);
+				[project + '.bin', project + '.projectdeps']);
 		
 	}
 
 	fb.std = function(config) {
-		console.log("---- Creating std project for ");
+		console.log('---- Creating std project for');
 	 	console.log(config);
+	 	console.log('--------');
 		var rootdir = config.root;
 		var dir = config.project;
 		var deps = config.projectdeps;
 		var testlibs = config.testlibs;
+		var libs = config.libs;
 		
 		var nom = function(localdir) {
 			return dir + "." + localdir
@@ -82,21 +84,17 @@
 			return "repo|" + id.org + ':' + id.item + ':' + id.ver + ':' + id.type;
 		}
 		
-		for(var ind = 0; ind < testlibs.length; ind++) {
-			var lib = testlibs[ind];
-			
+		_.each(_.union(libs, testlibs), function(lib) {
 			T(repo(lib), function(l) {
 				return function(cb, res){
-					console.log("Right before download:");
-					console.log(l);
 					cb(null, fb.downloader(l));
 				}}(lib), []);
-		}
+		});
 		T(nom('src'), fn(path.join(rootdir, dir,"/src/main/java/")), []);
-		var dependencies = deps&&deps.length>0
-			?_.map(deps, function(dep) {return dep + '.bin'})
-			:[]
-		var depFunc = deps&&deps.length>0
+		deps = deps?deps:[];
+
+		var dependencies = _.map(deps, function(dep) {return dep + '.bin'});
+		var depFunc = dependencies.length>0
 			? function(cb, res){
 				var a = _.union(_.map(deps, 
 					function(dep) {
@@ -105,9 +103,9 @@
 				));
 				cb(null, a);
 			}
-			: fn([])
-		T(nom('libs'), depFunc, dependencies);
-		T(nom('bin'), function(cb, res) {javac(res[nom('src')],[],res[nom('libs')],cb);}, [nom('src'), nom('libs')]);
+			: fn([]);
+		T(nom('projectdeps'), depFunc, dependencies);
+		T(nom('bin'), function(cb, res) {javac(res[nom('src')],[],res[nom('projectdeps')],cb);}, [nom('src'), nom('projectdeps')]);
 		T(nom('test'), fn(path.join(rootdir, dir, "/src/test/java/")), []);
 		T(nom('testlibs'), 
 			function(cb, res){cb(null, _.map(testlibs, function(lib){return res[repo(lib)]} ));},
@@ -115,12 +113,12 @@
 		
 		T(nom('testbin'),  
 				function(cb, res) {
-					javac(res[nom('test')],[res[nom('bin')]],_.union(res[nom('libs')], res[nom('testlibs')]),cb);
-					}, [nom('test'), nom('bin'), nom('testlibs'), nom('libs')]);
+					javac(res[nom('test')],[res[nom('bin')]],_.union(res[nom('projectdeps')], res[nom('testlibs')]),cb);
+					}, [nom('test'), nom('bin'), nom('testlibs'), nom('projectdeps')]);
 		T(nom('unittestresult'), 
 				function(cb, res) {
-					runTests(res[nom('testbin')], _.union(res[nom('testbin')], res[nom('bin')]),_.union(res[nom('testlibs')], res[nom('libs')]),cb);
-				}, [nom('testbin'), nom('bin'), nom('testlibs'), nom('libs')]);
+					runTests(res[nom('testbin')], _.union(res[nom('testbin')], res[nom('bin')]),_.union(res[nom('testlibs')], res[nom('projectdeps')]),cb);
+				}, [nom('testbin'), nom('bin'), nom('testlibs'), nom('projectdeps')]);
 	
 		return fb.graph;
 	};
