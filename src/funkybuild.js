@@ -92,6 +92,7 @@
 		});
 		
 		T(nom('src'), fn(path.join(rootdir, dir,"/src/main/java/")), []);
+		T(nom('test'), fn(path.join(rootdir, dir, "/src/test/java/")), []);
 
 		deps = deps?deps:[];
 		var projectDependencies = _.map(deps, function(dep) {return dep + '.bin'});
@@ -100,22 +101,25 @@
 			: fn([]);
 		T(nom('projectdeps'), depFunc, projectDependencies);
 
-		T(nom('bin'), function(cb, res) {javac(res[nom('src')],res[nom('libs')],res[nom('projectdeps')],cb);}, [nom('src'), nom('projectdeps')]);
-		
-		T(nom('test'), fn(path.join(rootdir, dir, "/src/test/java/")), []);
+		T(nom('bin'), 
+			function(cb, res) {
+				javac(res[nom('src')],[res[nom('libs')],res[nom('projectdeps')]],cb);
+			}, [nom('src'), nom('libs'), nom('projectdeps')]);
 		
 		T(nom('testlibs'), 
-			function(cb, res){cb(null, _.map(testlibs, function(lib){return res[repo(lib)]} ));},
-		 	_.map(testlibs, function(lib){return repo(lib)} ));
+			function(cb, res){
+				cb(null, _.map(testlibs, function(lib){return res[repo(lib)]} ));
+			}, _.map(testlibs, function(lib){return repo(lib)} ));
 		
 		T(nom('libs'), 
-				function(cb, res){cb(null, _.map(libs, function(lib){return res[repo(lib)]} ));},
-			 	_.map(libs, function(lib){return repo(lib)} ));
+			function(cb, res){
+				cb(null, _.map(libs, function(lib){return res[repo(lib)]} ));
+			}, _.map(libs, function(lib){return repo(lib)} ));
 		
 		T(nom('testbin'),  
-				function(cb, res) {
-					javac(res[nom('test')],[res[nom('bin')]], [res[nom('projectdeps')],res[nom('libs')], res[nom('testlibs')]],cb);
-					}, [nom('test'), nom('bin'), nom('libs'), nom('testlibs'), nom('projectdeps')]);
+			function(cb, res) {
+				javac(res[nom('test')],[res[nom('bin')], res[nom('projectdeps')], res[nom('libs')], res[nom('testlibs')]],cb);
+			}, [nom('test'), nom('bin'), nom('libs'), nom('testlibs'), nom('projectdeps')]);
 					
 		T(nom('unittestresult'), 
 				function(cb, res) {

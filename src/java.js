@@ -3,12 +3,13 @@
 	module.exports = j;
 
 	var path = require('path');
+	var util = require('util');
 	var _ = require('underscore');
-	var utils = require('./utils');
-	var replaceAll = utils.replaceAll;
-	var endsWith = utils.endsWith;
-	var Cmd = utils.Cmd;
-	var runCmd = utils.runCmd;
+	var funkyutils = require('./utils');
+	var replaceAll = funkyutils.replaceAll;
+	var endsWith = funkyutils.endsWith;
+	var Cmd = funkyutils.Cmd;
+	var runCmd = funkyutils.runCmd;
 	
 	var fileutils = require('./fileutils');
 	var mkdir = fileutils.mkdir;
@@ -33,21 +34,29 @@
 		return cp;
 	}
 
-	j.javac = function(src, classes, libs, callback) {
+	j.javac = function(src, classpath, callback) {
 		var bin = path.join(builddir, replaceAll(src, '\/', '_'));
 		mkdir(bin);
 		var args = ['-d', bin];
 
-		var cp = _.flatten([classes,libs]).join(':');
-		args.push('-cp');
-		args.push(cp);
+		var cp = _.flatten(classpath).join(':');
+		if(cp!='') {
+			args.push('-cp');
+			args.push(cp);
+		}
 
 		var files = walk(src);
 		for (var i = 0; i < files.length; i++) {
 			args.push(src + files[i]);
 		}
-		runCmd(Cmd('javac', '.', args), function(exitcode) {
-			callback(null, bin);
+		var compilation = Cmd('javac', '.', args);
+		runCmd(compilation, function(exitcode) {
+			if(exitcode!=0) {
+				callback('Couldnt compile ' + util.inspect(compilation), null);
+			} else {
+				callback(null, bin);
+			}
+			
 		});
 	}
 }());
