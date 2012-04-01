@@ -68,7 +68,8 @@
 	}
 
 	fb.std = function(config) {
-		console.log("---- Creating std project for " + config);
+		console.log("---- Creating std project for ");
+	 	console.log(config);
 		var rootdir = config.root;
 		var dir = config.project;
 		var deps = config.projectdeps;
@@ -78,10 +79,18 @@
 			return dir + "." + localdir
 		}
 		var repo = function(id) {
-			return "repo|" + id;
+			return "repo|" + id.org + ':' + id.item + ':' + id.ver + ':' + id.type;
 		}
-		for(i in testlibs) {
-			T(repo(testlibs[i]), function(cb, res){cb(null, fb.downloader(testlibs[i]));}, []);
+		
+		for(var ind = 0; ind < testlibs.length; ind++) {
+			var lib = testlibs[ind];
+			
+			T(repo(lib), function(l) {
+				return function(cb, res){
+					console.log("Right before download:");
+					console.log(l);
+					cb(null, fb.downloader(l));
+				}}(lib), []);
 		}
 		T(nom('src'), fn(path.join(rootdir, dir,"/src/main/java/")), []);
 		var dependencies = deps&&deps.length>0
@@ -94,7 +103,6 @@
 						return res[dep + '.bin'];
 					}
 				));
-				console.log(a);
 				cb(null, a);
 			}
 			: fn([])

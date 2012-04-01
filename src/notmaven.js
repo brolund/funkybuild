@@ -11,6 +11,7 @@
 	mvn.mavenrepo = {host:'localhost', port:8000, path:'/'};
 
 	mvn.downloader = function(dep) {
+		console.log('Downloading');
 		var depSubDir = path.join(dep.org, dep.item, dep.ver);
 		var depFileName = dep.item + '-' + dep.ver+'.' + dep.type;
 		var depSubDirAndFileName = path.join(depSubDir, depFileName);
@@ -25,7 +26,6 @@
 		  path: path.join(mvn.mavenrepo.path, depSubDirAndFileName)
 		};
 
-		console.log('Downloading');
 		console.log(options);
 		
 		http.get(options, function(res) {
