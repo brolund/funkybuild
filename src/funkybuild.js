@@ -99,7 +99,9 @@
 		var depFunc = deps.length>0
 			? function(cb, res){ cb(null, _.union(_.map(deps, function(dep) {return res[dep + '.bin'];}))); }
 			: fn([]);
-		T(nom('projectdeps'), depFunc, projectDependencies);
+			
+		T(nom('projectdeps'), 
+			depFunc, projectDependencies);
 
 		T(nom('bin'), 
 			function(cb, res) {
