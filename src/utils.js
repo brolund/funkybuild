@@ -56,7 +56,7 @@
 		});
 
 		spawnedCmd.stderr.on('data', function (data) {
-			console.error(data.toString('utf-8'));
+			console.log("error:" + data.toString('utf-8'));
 		});	
 
 		spawnedCmd.on('exit', function (exitcode) {

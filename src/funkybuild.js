@@ -76,9 +76,9 @@
 		var deps = config.projectdeps;
 		var testlibs = config.testlibs;
 		var libs = config.libs;
-		
+
 		var nom = function(localdir) {
-			return 'proj::' + dir + "." + localdir
+			return dir + "." + localdir
 		}
 		var repo = function(id) {
 			return 'repo::' + id.org + ':' + id.item + ':' + id.ver + ':' + id.type;
@@ -95,7 +95,7 @@
 		T(nom('test'), fn(path.join(rootdir, dir, "/src/test/java/")), []);
 
 		deps = deps?deps:[];
-		var projectDependencies = _.map(deps, function(dep) {return dep + '.bin'});
+		var projectDependencies = _.map(deps, function(dep) {return dep + '.bin';});
 		var depFunc = deps.length>0
 			? function(cb, res){ cb(null, _.union(_.map(deps, function(dep) {return res[dep + '.bin'];}))); }
 			: fn([]);
