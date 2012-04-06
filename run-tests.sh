@@ -1,0 +1,1 @@
+ls test/*.js | xargs -L 1 node
