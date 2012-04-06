@@ -7,3 +7,5 @@ config["My tests"] = {
         "test/*-test.js"
     ]
 }
+
+
