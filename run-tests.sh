@@ -1,1 +1,1 @@
-find test -type f -maxdepth 20 | xargs -L 1 node
+buster test
