@@ -50,9 +50,9 @@
 			args.push(src + files[i]);
 		}
 		var compilation = Cmd('javac', '.', args);
-		runCmd(compilation, function(exitcode) {
-			if(exitcode!=0) {
-				callback('Couldnt compile ' + util.inspect(compilation), null);
+		runCmd(compilation, function(result) {
+			if(result.exitcode!=0) {
+				callback(result, null);
 			} else {
 				callback(null, bin);
 			}

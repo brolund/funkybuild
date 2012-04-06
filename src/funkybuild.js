@@ -23,7 +23,7 @@
 	fb.graph = {};
 	
 	fb.downloader = function() {
-		throw 'No downloader configured. Configure with e.g. fb.downloadWith(mvn.downloader)';
+		throw "No downloader configured. Configure with e.g. fb.downloadWith(require('./notmaven').downloader)";
 	};
 	
 	fb.T = function(o, f, i) {
@@ -37,8 +37,8 @@
  	var runTests = function(testdir, classdirs, libs, cb) {					
 		var tests = _.map(_.filter(walk(testdir), j.isJavaClass), j.toClassName).join(' ');
 		runCmd(Cmd('java', '.', ['-cp', j.mergeClasspaths(classdirs, libs),'org.junit.runner.JUnitCore',tests]),
-			function(exitcode) {
-					cb(null, exitcode);
+			function(result) {
+					cb(null, result);
 				});
 	}
 
@@ -60,8 +60,8 @@
 		T('Result of ' + mainClass, 
 			function(cb, res) {
 				runCmd(Cmd('java', '.', ['-cp', _.union(res[project + '.bin'], res[project + '.projectdeps']).join(':'), mainClass]),
-				function(exitcode) {
-					cb(null, exitcode);
+				function(result) {
+					cb(null, result);
 				})}, 
 				[project + '.bin', project + '.projectdeps']);
 		
@@ -92,6 +92,7 @@
 		});
 		
 		T(nom('src'), fn(path.join(rootdir, dir,"/src/main/java/")), []);
+		
 		T(nom('test'), fn(path.join(rootdir, dir, "/src/test/java/")), []);
 
 		deps = deps?deps:[];

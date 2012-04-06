@@ -48,20 +48,23 @@
 		console.log('===============================================');
 		console.log('---- Running cmd:');
 		console.log(cmd);
-
+		var result = {stdout:[],stderr:[],exitcode:0}
 		var spawnedCmd = spawn(cmd.cmd, cmd.argArray, {cwd: cmd.dir});
 
 		spawnedCmd.stdout.on('data', function (data) {
 			console.log(data.toString('utf-8'));
+			result.stdout.push(data.toString('utf-8'));
 		});
 
 		spawnedCmd.stderr.on('data', function (data) {
 			console.log("error:" + data.toString('utf-8'));
+			result.stderr.push(data.toString('utf-8'));
 		});	
 
 		spawnedCmd.on('exit', function (exitcode) {
 			console.log('---- Execution done: ' + exitcode);
-			callback(exitcode);
+			result.exitcode=exitcode;
+			callback(result);
 		});
 	}
 }());

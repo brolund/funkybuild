@@ -34,8 +34,7 @@
 		  	console.log('Got response: ' + res.statusCode + ' for ' + depFileName);
 			var fileopts = {flags: 'w',
 			  				encoding: null,
-			  				mode: 0666 };
-			
+		  					mode: 0666 };
 			var writeStream = fs.createWriteStream(localFile, fileopts);
 			res.on('data', function (chunk) {
 				writeStream.write(chunk, encoding='binary');
