@@ -11,41 +11,47 @@
 	//mvn.mavenrepo = {host:'mirrors.ibiblio.org', port:80, path:'/maven2/'};
 	mvn.mavenrepo = {host:'uk.maven.org', port:80, path:'/maven2/'};
 	
-	mvn.downloader = function(cb, dep) {
-		console.log('Downloading');
-		var depSubDir = path.join(dep.org, dep.item, dep.ver);
-		var depFileName = dep.item + '-' + dep.ver+'.' + dep.type;
-		var depSubDirAndFileName = path.join(depSubDir, depFileName);
-
-		var localDir = path.join(mvn.localrepo, depSubDir);
-		fileutils.mkdir(localDir);
-		var localFile = path.join(localDir, depFileName);
-		
+	var getAndWrite = function(host, port, urlPath, localFileToWrite, cb) {
 		var options = {
-		  host: mvn.mavenrepo.host,
-		  port: mvn.mavenrepo.port,
-		  path: path.join(mvn.mavenrepo.path, depSubDirAndFileName)
+		  host: host,
+		  port: port,
+		  path: urlPath
 		};
-
 		console.log(options);
 		
-		
 		http.get(options, function(res) {
-		  	console.log('Got response: ' + res.statusCode + ' for ' + depFileName);
+		  	console.log('Got response: ' + res.statusCode + ' for ' + options.path);
 			var fileopts = {flags: 'w',
 			  				encoding: null,
 		  					mode: 0666 };
-			var writeStream = fs.createWriteStream(localFile, fileopts);
+			var writeStream = fs.createWriteStream(localFileToWrite, fileopts);
 			res.on('data', function (chunk) {
 				writeStream.write(chunk, encoding='binary');
 		  	});
 			res.on('end', function () {
 				writeStream.end();
-				cb(null, localFile);
+				cb(null, localFileToWrite);
 		  	});
 		}).on('error', function(e) {
 			console.log("Got error: " + e.message);
 			cb(e, null);
 		});
+	}
+
+	mvn.downloader = function(cb, dep) {
+		var depFileName = dep.item + '-' + dep.ver+'.' + dep.type;
+		console.log('Downloading ' + depFileName);
+
+		var depSubDir = path.join(dep.org, dep.item, dep.ver);
+
+		var localDir = path.join(mvn.localrepo, depSubDir);
+		fileutils.mkdir(localDir);
+
+		var depSubDirAndFileName = path.join(depSubDir, depFileName);
+
+		var localFile = path.join(localDir, depFileName);
+		
+
+		getAndWrite(mvn.mavenrepo.host, mvn.mavenrepo.port, path.join(mvn.mavenrepo.path, depSubDirAndFileName), localFile, cb);
 	};
 }());
