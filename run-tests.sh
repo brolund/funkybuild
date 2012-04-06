@@ -1,1 +1,1 @@
-ls test/*.js | xargs -L 1 node
+find test -type f -maxdepth 20 | xargs -L 1 node
