@@ -17,7 +17,5 @@ buster.testCase("Dependency download", {
 			refute(err);
 			done();
 		})
-		assert(true);
-		refute(false);
     }
 });
