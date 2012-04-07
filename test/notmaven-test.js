@@ -1,8 +1,21 @@
-// Node tests
-var buster = require("buster");
+var buster = require('buster');
+var http = require('http');
+var assert = buster.assertions.assert;
+var refute = buster.assertions.refute;
 
-buster.testCase("A module", {
-    "states the obvious": function () {
-        assert(true);
+var nmvn = require('../src/notmaven');
+
+buster.testRunner.timeout = 10000;
+
+buster.testCase("Dependency download", {
+    "get leaf dependency": function (done) {
+		var leafDependency = {org:'org/hamcrest', item:'hamcrest-all', ver:'1.1', type:'jar'};
+		nmvn.downloader(leafDependency, function(err, result) {
+			assert(result);
+			refute(err);
+			done();
+		})
+		assert(true);
+		refute(false);
     }
 });

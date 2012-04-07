@@ -37,8 +37,8 @@
 			cb(e, null);
 		});
 	}
-
-	mvn.downloader = function(cb, dep) {
+	
+	mvn.downloader = function(dep, cb) {
 		var depFileName = dep.item + '-' + dep.ver+'.' + dep.type;
 		console.log('Downloading ' + depFileName);
 
