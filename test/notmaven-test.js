@@ -5,7 +5,7 @@ var refute = buster.assertions.refute;
 
 var nmvn = require('../src/notmaven');
 
-buster.testRunner.timeout = 10000;
+buster.testRunner.timeout = 2000;
 
 buster.testCase("Dependency download", {
     "get leaf dependency": function (done) {
