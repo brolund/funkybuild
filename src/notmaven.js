@@ -29,8 +29,8 @@
 				writeStream.write(chunk, encoding='binary');
 		  	});
 			res.on('end', function () {
-				writeStream.end();
-				cb(null, {file:localFileToWrite});
+				writeStream.on('close', function() {cb(null, {file:localFileToWrite});});
+				writeStream.end();				
 		  	});
 		}).on('error', function(e) {
 			console.log("Got error: " + e.message);
