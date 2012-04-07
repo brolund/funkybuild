@@ -87,7 +87,7 @@
 		_.each(_.union(libs, testlibs), function(lib) {
 			T(repo(lib), function(l) {
 				return function(cb, res){
-					fb.downloader(cb, l);
+					fb.downloader(l, cb);
 				}}(lib), []);
 		});
 		

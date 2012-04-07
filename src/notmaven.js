@@ -30,7 +30,7 @@
 		  	});
 			res.on('end', function () {
 				writeStream.end();
-				cb(null, localFileToWrite);
+				cb(null, {file:localFileToWrite});
 		  	});
 		}).on('error', function(e) {
 			console.log("Got error: " + e.message);
