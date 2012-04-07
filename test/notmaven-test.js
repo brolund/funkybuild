@@ -5,6 +5,8 @@ var refute = buster.assertions.refute;
 
 var nmvn = require('../src/notmaven');
 
+// ugly patch to wait for download to be performed.
+// http can be fake eventually
 buster.testRunner.timeout = 2000;
 
 buster.testCase("Dependency download", {
