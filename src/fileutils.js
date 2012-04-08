@@ -30,7 +30,7 @@
 		return innerWalk(directory,"", []);
 	};
 
-	fu.walkAll = function(directory) {	
+	fu.walkAll = function(directory) {
 		var innerWalk = function(root, dir, res) {
 			var stuff = fs.readdirSync(path.join(root, dir));
 			if(stuff) {
@@ -38,8 +38,8 @@
 					var localPath = path.join(dir, stuff[o]);
 					var fullPath = path.join(root, localPath);
 					if(isDir(fullPath)) {
-						res.push(fullPath);
 						innerWalk(root, localPath, res);
+						res.push(fullPath);
 					} else {
 						res.push(fullPath);
 					}
@@ -47,15 +47,27 @@
 			}
 			return res;
 		}	
-		return innerWalk(directory,"", [directory]);
+		var result = innerWalk(directory,"", []);
+		result.push(directory)
+		return result;
 	};
 	
 	fu.wipeDirectory = function(dir) {
 		if(!path.existsSync(dir)) return;
 		console.log("Wiping " + path.resolve(dir));
-		var dirs = fu.walkAll(path.resolve(dir)).reverse();
-		console.log(dirs);
-		_.each(dirs, function(subdir){console.log("removing " + subdir);fs.rmdirSync(subdir)});
+		var filesAndDirs = fu.walkAll(path.resolve(dir));
+		console.log(filesAndDirs);
+		_.each(filesAndDirs, function(part){
+			if(path.existsSync(part)) {
+				if(fs.statSync(part).isDirectory()) {
+					fs.rmdirSync(part)
+				} else if(fs.statSync(part).isFile()) {
+					fs.unlinkSync(part)
+				};
+			};
+			
+		});
+			
 	}
 
 	fu.mkdir = function(dire) {
