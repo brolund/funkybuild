@@ -51,6 +51,7 @@
 	};
 	
 	fu.wipeDirectory = function(dir) {
+		if(!path.existsSync(dir)) return;
 		console.log("Wiping " + path.resolve(dir));
 		var dirs = fu.walkAll(path.resolve(dir)).reverse();
 		console.log(dirs);

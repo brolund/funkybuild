@@ -38,6 +38,10 @@
 		});
 	}
 	
+	mvn.cleanLocalRepository = function() {
+		fileutils.wipeDirectory(mvn.localrepo);
+	}
+	
 	mvn.downloader = function(dep, cb) {
 		var depFileName = dep.item + '-' + dep.ver+'.' + dep.type;
 		console.log('Downloading ' + depFileName);
