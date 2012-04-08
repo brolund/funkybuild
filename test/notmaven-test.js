@@ -19,9 +19,9 @@ buster.testCase("Dependency download", {
 		nmvn.cleanLocalRepository();
 		
 		nmvn.downloader(leafDependency, function(err, result) {
-			expect(result.file).toMatch(/hamcrest-all-1\.1\.jar$/);
-			assert(fs.statSync(result.file).isFile());
-			expect(fs.statSync(result.file).size).toEqual(541839);			
+			expect(result).toMatch(/hamcrest-all-1\.1\.jar$/);
+			assert(fs.statSync(result).isFile());
+			expect(fs.statSync(result).size).toEqual(541839);			
 			refute(err);
 			done();
 		})

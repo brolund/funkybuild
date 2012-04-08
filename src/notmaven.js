@@ -29,7 +29,7 @@
 				writeStream.write(chunk, encoding='binary');
 		  	});
 			res.on('end', function () {
-				writeStream.on('close', function() {cb(null, {file:localFileToWrite,pom:"TBD"});});
+				writeStream.on('close', function() {cb(null, localFileToWrite);});
 				writeStream.end();				
 		  	});
 		}).on('error', function(e) {
@@ -43,7 +43,7 @@
 	}
 	
 	mvn.downloader = function(dep, cb) {
-		var depFileName = dep.item + '-' + dep.ver+'.' + dep.type;
+		var depFileName = dep.item + '-' + dep.ver + '.' + dep.type;
 		console.log('Downloading ' + depFileName);
 
 		var depSubDir = path.join(dep.org, dep.item, dep.ver);
