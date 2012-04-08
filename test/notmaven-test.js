@@ -7,6 +7,7 @@ var refute = buster.assertions.refute;
 var expect = buster.assertions.expect;
 
 var nmvn = require('../src/notmaven');
+var fb = require('../src/funkybuild');
 
 // ugly patch to wait for download to be performed.
 // http can be fake eventually
@@ -25,5 +26,24 @@ buster.testCase("Dependency download", {
 			refute(err);
 			done();
 		})
-    }
+    },
+    
+	"can resolve a pom without dependencies": function (done) {
+		var pom = '<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+		<modelVersion>4.0.0</modelVersion>
+		<parent>
+		<groupId>org.hamcrest</groupId>
+		<artifactId>hamcrest-parent</artifactId>
+		<version>1.1</version>
+		</parent>
+		<artifactId>hamcrest-all</artifactId>
+		<packaging>jar</packaging>
+		<name>Hamcrest All</name>
+		</project>';
+		fb.T = function(out, fn, inputs) {
+			
+		};
+		//nmvn.resolvePom();
+	}
+
 });
