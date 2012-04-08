@@ -29,7 +29,7 @@
 				writeStream.write(chunk, encoding='binary');
 		  	});
 			res.on('end', function () {
-				writeStream.on('close', function() {cb(null, {file:localFileToWrite});});
+				writeStream.on('close', function() {cb(null, {file:localFileToWrite,pom:"TBD"});});
 				writeStream.end();				
 		  	});
 		}).on('error', function(e) {
