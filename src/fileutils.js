@@ -56,7 +56,6 @@
 		if(!path.existsSync(dir)) return;
 		console.log("Wiping " + path.resolve(dir));
 		var filesAndDirs = fu.walkAll(path.resolve(dir));
-		console.log(filesAndDirs);
 		_.each(filesAndDirs, function(part){
 			if(path.existsSync(part)) {
 				if(fs.statSync(part).isDirectory()) {
@@ -79,7 +78,6 @@
 		for(var i=0;i<dirs.length;i++) {
 			currDir = path.join(currDir, dirs[i]);
 			if(!path.existsSync(currDir) && dirs[i].length>0) {
-				console.log('Making ' + currDir);
 				fs.mkdirSync(currDir);
 			};
 		}	

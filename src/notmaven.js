@@ -42,6 +42,10 @@
 		fileutils.wipeDirectory(mvn.localrepo);
 	}
 	
+	mvn.resolvePom = function(pom, cb) {
+		cb([]);
+	}
+	
 	mvn.downloader = function(dep, cb) {
 		var depFileName = dep.item + '-' + dep.ver + '.' + dep.type;
 		console.log('Downloading ' + depFileName);
