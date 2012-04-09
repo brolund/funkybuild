@@ -3,4 +3,5 @@ classes
 *.class
 bin
 node_modules
+build
 
