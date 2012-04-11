@@ -2,6 +2,7 @@ var buster = require('buster');
 var http = require('http');
 var fs = require('fs');
 var path = require('path');
+var util = require('util');
 var assert = buster.assertions.assert;
 var refute = buster.assertions.refute;
 var expect = buster.assertions.expect;
@@ -12,6 +13,25 @@ var fb = require('../src/funkybuild');
 // ugly patch to wait for download to be performed.
 // http can be fake eventually
 buster.testRunner.timeout = 2000;
+
+var pomTemplate = 
+"<project>\
+  <modelVersion>4.0.0</modelVersion>\
+  <groupId>group.id</groupId>\
+  <artifactId>artifact-id</artifactId>\
+  <version>1.2</version>\
+  <dependencies>\
+  %s\
+  </dependencies>\
+</project>";
+
+var dependencyTemplate = 
+"<dependency>\
+    <groupId>%s</groupId>\
+    <artifactId>%s</artifactId>\
+    <version>%s</version>\
+</dependency>";
+
 
 buster.testCase("Dependency download", {
     "get leaf dependency": function (done) {
@@ -25,29 +45,25 @@ buster.testCase("Dependency download", {
 			expect(fs.statSync(result).size).toEqual(541839);			
 			refute(err);
 			done();
-		})
+		});
     },
     
-	"can resolve a pom without dependencies": function (done) {
-		var pom = '<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">\
-		<modelVersion>4.0.0</modelVersion>\
-		<parent>\
-		<groupId>org.hamcrest</groupId>\
-		<artifactId>hamcrest-parent</artifactId>\
-		<version>1.1</version>\
-		</parent>\
-		<artifactId>hamcrest-all</artifactId>\
-		<packaging>jar</packaging>\
-		<name>Hamcrest All</name>\
-		</project>';
-		var calls = [];
-		fb.T = function(out, fn, inputs) {
-			calls.push({o:out, f:fn, i:inputs});
-		};
-		nmvn.resolvePom(pom, function(err,res) {
-			expect(calls.length).toEqual(0);
-			done();
-		});
+	"can resolve a pom without dependencies": function () {
+		var result = nmvn.resolvePom(util.format(pomTemplate, ''));
+		expect(result.length).toEqual(0);
+	},
+
+	"can resolve a pom with a single dependency": function () {
+		var pom = util.format(pomTemplate, util.format(dependencyTemplate, 'group.id', 'artifact.id', '0.1.2'));
+		console.log(pom);
+		var result = nmvn.resolvePom(pom);
+		expect(result.length).toEqual(1);
+		
+		expect(result[0].item).toEqual('artifact.id');
+		expect(result[0].org).toEqual('group.id');
+		expect(result[0].ver).toEqual('0.1.2');
+		expect(result[0].type).toEqual('jar');
 	}
+
 
 });

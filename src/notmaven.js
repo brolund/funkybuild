@@ -5,7 +5,9 @@
 	var path = require('path');
 	var fs = require('fs');
 	var http = require('http');
+	var _ = require('underscore');
 	var fileutils = require('./fileutils');
+	var xml = require('libxmljs');
 	
 	mvn.localrepo = process.env.HOME + '/.m2/funkyrepo/';
 	//mvn.mavenrepo = {host:'mirrors.ibiblio.org', port:80, path:'/maven2/'};
@@ -42,8 +44,15 @@
 		fileutils.wipeDirectory(mvn.localrepo);
 	}
 	
-	mvn.resolvePom = function(pom, cb) {
-		cb([]);
+	mvn.resolvePom = function(pom) {
+		var xmlDoc = xml.parseXmlString(pom);
+		return _.map(xmlDoc.find("//dependency"), function(dep){
+			return {
+				item:dep.get('./artifactId/text()'),
+			 	org:dep.get('./groupId/text()'), 
+				ver:dep.get('./version/text()'),
+				type: 'jar'
+			}});
 	}
 	
 	mvn.downloader = function(dep, cb) {

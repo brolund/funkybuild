@@ -5,3 +5,4 @@ npm link buster
 npm install buster-assertions
 npm install async
 npm install underscore
+npm install libxmljs
