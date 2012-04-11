@@ -65,7 +65,17 @@ buster.testCase("Dependency download", {
 		var result = nmvn.resolvePom(pom);
 		expect(result.length).toEqual(1);
 		verifyDependency(result[0], 'group.id', 'artifact.id', '0.1.2', 'jar'); 
-		
+	}
+
+	"can resolve a pom with a tvow dependencies": function () {
+		var deps = 
+			util.format(dependencyTemplate, 'group.id.1', 'artifact.id.1', '0.1') + 
+			util.format(dependencyTemplate, 'group.id.1', 'artifact.id.1', '0.2');
+		var pom = util.format(pomTemplate, deps);
+		var result = nmvn.resolvePom(pom);
+		expect(result.length).toEqual(2);
+		verifyDependency(result[0], 'group.id.1', 'artifact.id.1', '0.1', 'jar'); 
+		verifyDependency(result[1], 'group.id.2', 'artifact.id.2', '0.2', 'jar'); 
 	}
 
 
