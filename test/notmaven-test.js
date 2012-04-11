@@ -32,6 +32,12 @@ var dependencyTemplate =
     <version>%s</version>\
 </dependency>";
 
+var verifyDependency = function(dep, group, artifact, version, type) {
+	expect(dep.org).toEqual(group);
+	expect(dep.item).toEqual(artifact);
+	expect(dep.ver).toEqual(version);
+	expect(dep.type).toEqual(type);
+}
 
 buster.testCase("Dependency download", {
     "get leaf dependency": function (done) {
@@ -58,11 +64,8 @@ buster.testCase("Dependency download", {
 		console.log(pom);
 		var result = nmvn.resolvePom(pom);
 		expect(result.length).toEqual(1);
+		verifyDependency(result[0], 'group.id', 'artifact.id', '0.1.2', 'jar'); 
 		
-		expect(result[0].item).toEqual('artifact.id');
-		expect(result[0].org).toEqual('group.id');
-		expect(result[0].ver).toEqual('0.1.2');
-		expect(result[0].type).toEqual('jar');
 	}
 
 
