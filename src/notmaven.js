@@ -52,8 +52,8 @@
 		var xmlDoc = xml.parseXmlString(pom);
 		return _.map(xmlDoc.find("//dependency"), function(dep){
 			return {
-				artifactId:dep.get('./artifactId/text()'),
-			 	groupId:dep.get('./groupId/text()'), 
+				artifact:dep.get('./artifactId/text()'),
+			 	group:dep.get('./groupId/text()'), 
 				version:dep.get('./version/text()'),
 				type:defaultOnUndef(dep.get('./type/text()'), 'jar'),
 				scope:defaultOnUndef(dep.get('./scope/text()'), 'compile')
@@ -61,10 +61,10 @@
 	}
 	
 	mvn.downloader = function(dep, cb) {
-		var depFileName = dep.artifactId + '-' + dep.version + '.' + dep.type;
+		var depFileName = dep.artifact + '-' + dep.version + '.' + dep.type;
 		console.log('Downloading ' + depFileName);
 
-		var depSubDir = path.join(dep.groupId, dep.artifactId, dep.version);
+		var depSubDir = path.join(dep.group, dep.artifact, dep.version);
 
 		var localDir = path.join(mvn.localrepo, depSubDir);
 		fileutils.mkdir(localDir);

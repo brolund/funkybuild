@@ -7,9 +7,9 @@ funky.downloadWith(notmvn.downloader);
 
 /////////////////////////////////
 
-var junit = {org:'junit', item:'junit', ver:'4.8.2', type:'jar'};
-var asm = {org:'asm', item:'asm', ver:'3.1', type:'jar'};
-var batik = {org:'batik', item:'batik-awt-util', ver:'1.6', type:'jar'};
+var junit = {group:'junit', artifact:'junit', version:'4.8.2', type:'jar'};
+var asm = {group:'asm', artifact:'asm', version:'3.1', type:'jar'};
+var batik = {group:'batik', artifact:'batik-awt-util', version:'1.6', type:'jar'};
 
 funky.std({root:'javaroot', project:'subproj', libs:[batik, asm], testlibs:[junit]});
 funky.std({root:'javaroot', project:'mainproj', projectdeps:['subproj'], libs:[asm], testlibs:[junit]});

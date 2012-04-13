@@ -42,8 +42,8 @@ var minimalDependencyTemplate =
 </dependency>";
 
 var verifyDependency = function(dep, group, artifact, version, type, scope) {
-	expect(dep.groupId).toEqual(group);
-	expect(dep.artifactId).toEqual(artifact);
+	expect(dep.group).toEqual(group);
+	expect(dep.artifact).toEqual(artifact);
 	expect(dep.version).toEqual(version);
 	expect(dep.type).toEqual(type);
 	expect(dep.scope).toEqual(scope);
