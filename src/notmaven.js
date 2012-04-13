@@ -52,19 +52,19 @@
 		var xmlDoc = xml.parseXmlString(pom);
 		return _.map(xmlDoc.find("//dependency"), function(dep){
 			return {
-				item:dep.get('./artifactId/text()'),
-			 	org:dep.get('./groupId/text()'), 
-				ver:dep.get('./version/text()'),
+				artifactId:dep.get('./artifactId/text()'),
+			 	groupId:dep.get('./groupId/text()'), 
+				version:dep.get('./version/text()'),
 				type:defaultOnUndef(dep.get('./type/text()'), 'jar'),
 				scope:defaultOnUndef(dep.get('./scope/text()'), 'compile')
 			}});
 	}
 	
 	mvn.downloader = function(dep, cb) {
-		var depFileName = dep.item + '-' + dep.ver + '.' + dep.type;
+		var depFileName = dep.artifactId + '-' + dep.version + '.' + dep.type;
 		console.log('Downloading ' + depFileName);
 
-		var depSubDir = path.join(dep.org, dep.item, dep.ver);
+		var depSubDir = path.join(dep.groupId, dep.artifactId, dep.version);
 
 		var localDir = path.join(mvn.localrepo, depSubDir);
 		fileutils.mkdir(localDir);

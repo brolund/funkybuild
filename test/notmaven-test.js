@@ -42,16 +42,16 @@ var minimalDependencyTemplate =
 </dependency>";
 
 var verifyDependency = function(dep, group, artifact, version, type, scope) {
-	expect(dep.org).toEqual(group);
-	expect(dep.item).toEqual(artifact);
-	expect(dep.ver).toEqual(version);
+	expect(dep.groupId).toEqual(group);
+	expect(dep.artifactId).toEqual(artifact);
+	expect(dep.version).toEqual(version);
 	expect(dep.type).toEqual(type);
 	expect(dep.scope).toEqual(scope);
 }
 
 buster.testCase("Dependency download", {
     "get leaf dependency": function (done) {
-		var leafDependency = {org:'org/hamcrest', item:'hamcrest-all', ver:'1.1', type:'jar'};
+		var leafDependency = {groupId:'org/hamcrest', artifactId:'hamcrest-all', version:'1.1', type:'jar'};
 		nmvn.localrepo = path.resolve('./build/localrepo');
 		nmvn.cleanLocalRepository();
 		
