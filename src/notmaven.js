@@ -3,10 +3,12 @@
 	module.exports = mvn;
 
 	var path = require('path');
+	var async = require('async');
 	var fs = require('fs');
 	var http = require('http');
 	var _ = require('underscore');
 	var fileutils = require('./fileutils');
+	var utils2 = require('./utils');
 	var xml = require('libxmljs');
 	
 	mvn.localrepo = process.env.HOME + '/.m2/funkyrepo/';
@@ -60,11 +62,34 @@
 			}});
 	}
 	
+	mvn.resolveTransitiveDependencies = function(dep, cb) {
+		var pom = {group:dep.group, artifact:dep.artifact, version:dep.version, scope:dep.scope, type:'pom'};
+		
+		mvn.downloader(
+			pom, 
+			function(err, res) {
+				var subDependencies = mvn.resolvePom(fs.readFileSync(res));
+				async.map(
+					subDependencies, 
+					function(subDep, subCb) {
+						mvn.resolveTransitiveDependencies(subDep, function(err3, res3) {
+							subCb(err3, res3);
+						})
+					},
+					function(err2, res2) {
+						if(err2) {cb(err2);}
+						pom.dependencies = res2;
+						cb(pom);
+					}
+				);
+		});
+	}
+	
 	mvn.downloader = function(dep, cb) {
 		var depFileName = dep.artifact + '-' + dep.version + '.' + dep.type;
 		console.log('Downloading ' + depFileName);
-
-		var depSubDir = path.join(dep.group, dep.artifact, dep.version);
+		
+		var depSubDir = path.join(utils2.replaceAll(dep.group, '[\.]', '/'), dep.artifact, dep.version);
 
 		var localDir = path.join(mvn.localrepo, depSubDir);
 		fileutils.mkdir(localDir);

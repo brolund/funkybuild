@@ -51,7 +51,7 @@ var verifyDependency = function(dep, group, artifact, version, type, scope) {
 
 buster.testCase("Dependency download", {
     "get leaf dependency": function (done) {
-		var leafDependency = {groupId:'org/hamcrest', artifactId:'hamcrest-all', version:'1.1', type:'jar'};
+		var leafDependency = {group:'org/hamcrest', artifact:'hamcrest-all', version:'1.1', type:'jar'};
 		nmvn.localrepo = path.resolve('./build/localrepo');
 		nmvn.cleanLocalRepository();
 		
@@ -70,7 +70,8 @@ buster.testCase("Dependency download", {
 	},
 
 	"can resolve a pom with a single dependency": function () {
-		var pom = util.format(pomTemplate, util.format(dependencyTemplate, 'group.id', 'artifact.id', '0.1.2', 'jar', 'scope'));
+		var pom = 
+			util.format(pomTemplate, util.format(dependencyTemplate, 'group.id', 'artifact.id', '0.1.2', 'jar', 'scope'));
 		console.log(pom);
 		var result = nmvn.resolvePom(pom);
 		expect(result.length).toEqual(1);
@@ -95,7 +96,20 @@ buster.testCase("Dependency download", {
 		var result = nmvn.resolvePom(pom);
 		expect(result.length).toEqual(1);
 		verifyDependency(result[0], 'group.id.1', 'artifact.id.1', '0.1', 'jar', 'compile'); 
-	}
+	},
 
+	"resolves transient pom dependencies": function (done) {
+		nmvn.resolveTransitiveDependencies({group:'com.agical.rmock', artifact:'rmock', version:'2.0.2'},
+			function(err, result) {
+				expect(result).toEqual({
+					group:'com.agical.rmock', artifact:'rmock', version:'2.0.2', type:'jar',scope:'compile',
+					dependencies: [
+						{group:'junit', artifact:'junit', version:'3.8.1', type:'jar',scope:'compile'},
+						{group:'cglib', artifact:'cglib-nodep', version:'2.1_2', type:'jar',scope:'compile'},				
+					]});
+				done();
+			});
+	}
+	
 
 });
