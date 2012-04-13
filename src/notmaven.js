@@ -51,7 +51,8 @@
 				item:dep.get('./artifactId/text()'),
 			 	org:dep.get('./groupId/text()'), 
 				ver:dep.get('./version/text()'),
-				type: 'jar'
+				type:dep.get('./type/text()'),
+				scope:dep.get('./scope/text()')
 			}});
 	}
 	

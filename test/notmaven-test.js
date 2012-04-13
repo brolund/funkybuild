@@ -30,13 +30,16 @@ var dependencyTemplate =
     <groupId>%s</groupId>\
     <artifactId>%s</artifactId>\
     <version>%s</version>\
+    <type>%s</type>\
+    <scope>%s</scope>\
 </dependency>";
 
-var verifyDependency = function(dep, group, artifact, version, type) {
+var verifyDependency = function(dep, group, artifact, version, type, scope) {
 	expect(dep.org).toEqual(group);
 	expect(dep.item).toEqual(artifact);
 	expect(dep.ver).toEqual(version);
 	expect(dep.type).toEqual(type);
+	expect(dep.scope).toEqual(scope);
 }
 
 buster.testCase("Dependency download", {
@@ -60,22 +63,33 @@ buster.testCase("Dependency download", {
 	},
 
 	"can resolve a pom with a single dependency": function () {
-		var pom = util.format(pomTemplate, util.format(dependencyTemplate, 'group.id', 'artifact.id', '0.1.2'));
+		var pom = util.format(pomTemplate, util.format(dependencyTemplate, 'group.id', 'artifact.id', '0.1.2', 'jar', 'scope'));
 		console.log(pom);
 		var result = nmvn.resolvePom(pom);
 		expect(result.length).toEqual(1);
-		verifyDependency(result[0], 'group.id', 'artifact.id', '0.1.2', 'jar'); 
+		verifyDependency(result[0], 'group.id', 'artifact.id', '0.1.2', 'jar', 'scope'); 
 	},
 
 	"can resolve a pom with a tvo dependencies": function () {
 		var deps = 
-			util.format(dependencyTemplate, 'group.id.1', 'artifact.id.1', '0.1') + 
-			util.format(dependencyTemplate, 'group.id.2', 'artifact.id.2', '0.2');
+			util.format(dependencyTemplate, 'group.id.1', 'artifact.id.1', '0.1', 'jar', 'some scope') + 
+			util.format(dependencyTemplate, 'group.id.2', 'artifact.id.2', '0.2', 'jar', 'some other scope');
 		var pom = util.format(pomTemplate, deps);
 		var result = nmvn.resolvePom(pom);
 		expect(result.length).toEqual(2);
-		verifyDependency(result[0], 'group.id.1', 'artifact.id.1', '0.1', 'jar'); 
-		verifyDependency(result[1], 'group.id.2', 'artifact.id.2', '0.2', 'jar'); 
+		verifyDependency(result[0], 'group.id.1', 'artifact.id.1', '0.1', 'jar', 'some scope'); 
+		verifyDependency(result[1], 'group.id.2', 'artifact.id.2', '0.2', 'jar', 'some other scope'); 
+	},
+
+	"can resolve a pom with scoped dependencies": function () {
+		var deps = 
+			util.format(dependencyTemplate, 'group.id.1', 'artifact.id.1', '0.1', 'jar', 'some scope') + 
+			util.format(dependencyTemplate, 'group.id.2', 'artifact.id.2', '0.2', 'jar', 'some other scope');
+		var pom = util.format(pomTemplate, deps);
+		var result = nmvn.resolvePom(pom);
+		expect(result.length).toEqual(2);
+		verifyDependency(result[0], 'group.id.1', 'artifact.id.1', '0.1', 'jar', 'some scope'); 
+		verifyDependency(result[1], 'group.id.2', 'artifact.id.2', '0.2', 'jar', 'some other scope'); 
 	}
 
 
