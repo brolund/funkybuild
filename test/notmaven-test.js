@@ -34,6 +34,13 @@ var dependencyTemplate =
     <scope>%s</scope>\
 </dependency>";
 
+var minimalDependencyTemplate = 
+"<dependency>\
+    <groupId>%s</groupId>\
+    <artifactId>%s</artifactId>\
+    <version>%s</version>\
+</dependency>";
+
 var verifyDependency = function(dep, group, artifact, version, type, scope) {
 	expect(dep.org).toEqual(group);
 	expect(dep.item).toEqual(artifact);
@@ -70,7 +77,7 @@ buster.testCase("Dependency download", {
 		verifyDependency(result[0], 'group.id', 'artifact.id', '0.1.2', 'jar', 'scope'); 
 	},
 
-	"can resolve a pom with a tvo dependencies": function () {
+	"can resolve a pom with a two scoped dependencies": function () {
 		var deps = 
 			util.format(dependencyTemplate, 'group.id.1', 'artifact.id.1', '0.1', 'jar', 'some scope') + 
 			util.format(dependencyTemplate, 'group.id.2', 'artifact.id.2', '0.2', 'jar', 'some other scope');
@@ -81,15 +88,13 @@ buster.testCase("Dependency download", {
 		verifyDependency(result[1], 'group.id.2', 'artifact.id.2', '0.2', 'jar', 'some other scope'); 
 	},
 
-	"can resolve a pom with scoped dependencies": function () {
+	"defaults type to jar and scope to compile": function () {
 		var deps = 
-			util.format(dependencyTemplate, 'group.id.1', 'artifact.id.1', '0.1', 'jar', 'some scope') + 
-			util.format(dependencyTemplate, 'group.id.2', 'artifact.id.2', '0.2', 'jar', 'some other scope');
+			util.format(minimalDependencyTemplate, 'group.id.1', 'artifact.id.1', '0.1');
 		var pom = util.format(pomTemplate, deps);
 		var result = nmvn.resolvePom(pom);
-		expect(result.length).toEqual(2);
-		verifyDependency(result[0], 'group.id.1', 'artifact.id.1', '0.1', 'jar', 'some scope'); 
-		verifyDependency(result[1], 'group.id.2', 'artifact.id.2', '0.2', 'jar', 'some other scope'); 
+		expect(result.length).toEqual(1);
+		verifyDependency(result[0], 'group.id.1', 'artifact.id.1', '0.1', 'jar', 'compile'); 
 	}
 
 

@@ -40,6 +40,10 @@
 		});
 	}
 	
+	var defaultOnUndef = function(val, def) {
+		return val?val:def;
+	}
+	
 	mvn.cleanLocalRepository = function() {
 		fileutils.wipeDirectory(mvn.localrepo);
 	}
@@ -51,8 +55,8 @@
 				item:dep.get('./artifactId/text()'),
 			 	org:dep.get('./groupId/text()'), 
 				ver:dep.get('./version/text()'),
-				type:dep.get('./type/text()'),
-				scope:dep.get('./scope/text()')
+				type:defaultOnUndef(dep.get('./type/text()'), 'jar'),
+				scope:defaultOnUndef(dep.get('./scope/text()'), 'compile')
 			}});
 	}
 	
