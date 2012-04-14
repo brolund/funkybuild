@@ -89,6 +89,7 @@
 		var depFileName = dep.artifact + '-' + dep.version + '.' + dep.type;
 		console.log('Downloading ' + depFileName);
 		
+		console.log(dep.group);
 		var depSubDir = path.join(utils2.replaceAll(dep.group, '[\.]', '/'), dep.artifact, dep.version);
 
 		var localDir = path.join(mvn.localrepo, depSubDir);
