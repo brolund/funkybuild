@@ -50,36 +50,47 @@
 		fileutils.wipeDirectory(mvn.localrepo);
 	}
 	
-	mvn.resolvePom = function(pom) {
-		var xmlDoc = xml.parseXmlString(pom);
-		return _.map(xmlDoc.find("//dependency"), function(dep){
+	mvn.resolvePom = function(pom2) {
+		var xmlDoc2 = xml.parseXmlString(pom2.trim());
+		return _.map(xmlDoc2.find("//dependencies/dependency"), function(dep){
 			return {
-				artifact:dep.get('./artifactId/text()'),
-			 	group:dep.get('./groupId/text()'), 
-				version:dep.get('./version/text()'),
-				type:defaultOnUndef(dep.get('./type/text()'), 'jar'),
-				scope:defaultOnUndef(dep.get('./scope/text()'), 'compile')
+				artifact:dep.get('./artifactId/text()').toString(),
+			 	group:dep.get('./groupId/text()').toString(), 
+				version:dep.get('./version/text()').toString(),
+				type:defaultOnUndef(dep.get('./type/text()'), 'jar').toString(),
+				scope:defaultOnUndef(dep.get('./scope/text()'), 'compile').toString()
 			}});
 	}
 	
 	mvn.resolveTransitiveDependencies = function(dep, cb) {
-		var pom = {group:dep.group, artifact:dep.artifact, version:dep.version, scope:dep.scope, type:'pom'};
-		
+		console.log('Resolving:', dep);
+		var returnedDep = {group:dep.group, artifact:dep.artifact, version:dep.version, type:defaultOnUndef(dep.type,'jar'), scope: defaultOnUndef(dep.scope,'compile'), dependencies:[]};
+		var pomDef = {group:dep.group, artifact:dep.artifact, version:dep.version, type:'pom', dependencies:[]};
 		mvn.downloader(
-			pom, 
+			pomDef, 
 			function(err, res) {
-				var subDependencies = mvn.resolvePom(fs.readFileSync(res));
+				console.log("pomFileName:", res);
+				var pomContents = fs.readFileSync(res, 'utf-8');
+				//console.log("pomContents:\n", pomContents);				
+				var subDependencies = mvn.resolvePom(pomContents);
+				console.log('subDependencies', subDependencies);
+				if(subDependencies.length==0) {
+					cb(null, returnedDep);
+					return;
+				}
 				async.map(
 					subDependencies, 
 					function(subDep, subCb) {
 						mvn.resolveTransitiveDependencies(subDep, function(err3, res3) {
+							console.log("subDep", subDep);
 							subCb(err3, res3);
-						})
+						});
 					},
 					function(err2, res2) {
 						if(err2) {cb(err2);}
-						pom.dependencies = res2;
-						cb(pom);
+						returnedDep.dependencies = res2;
+						console.log("Returned dep:", returnedDep);
+						cb(null, returnedDep);
 					}
 				);
 		});
@@ -87,7 +98,7 @@
 	
 	mvn.downloader = function(dep, cb) {
 		var depFileName = dep.artifact + '-' + dep.version + '.' + dep.type;
-		console.log('Downloading ' + depFileName);
+		console.log('Downloading', dep);
 		
 		console.log(dep.group);
 		var depSubDir = path.join(utils2.replaceAll(dep.group, '[\.]', '/'), dep.artifact, dep.version);
