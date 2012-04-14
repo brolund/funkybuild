@@ -69,11 +69,8 @@
 		mvn.downloader(
 			pomDef, 
 			function(err, res) {
-				console.log("pomFileName:", res);
 				var pomContents = fs.readFileSync(res, 'utf-8');
-				//console.log("pomContents:\n", pomContents);				
 				var subDependencies = mvn.resolvePom(pomContents);
-				console.log('subDependencies', subDependencies);
 				if(subDependencies.length==0) {
 					cb(null, returnedDep);
 					return;
@@ -82,14 +79,12 @@
 					subDependencies, 
 					function(subDep, subCb) {
 						mvn.resolveTransitiveDependencies(subDep, function(err3, res3) {
-							console.log("subDep", subDep);
 							subCb(err3, res3);
 						});
 					},
 					function(err2, res2) {
 						if(err2) {cb(err2);}
 						returnedDep.dependencies = res2;
-						console.log("Returned dep:", returnedDep);
 						cb(null, returnedDep);
 					}
 				);
