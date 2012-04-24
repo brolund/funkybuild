@@ -12,7 +12,7 @@ var fb = require('../src/funkybuild');
 
 // ugly patch to wait for download to be performed.
 // http can be fake eventually
-buster.testRunner.timeout = 2000;
+buster.testRunner.timeout = 10000;
 
 var pomTemplate = 
 "<project>\

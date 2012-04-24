@@ -81,7 +81,7 @@
 			return dir + "." + localdir
 		}
 		var repo = function(id) {
-			return 'repo::' + id.org + ':' + id.item + ':' + id.ver + ':' + id.type;
+			return 'repo::' + id.group + ':' + id.artifact + ':' + id.version + ':' + id.type;
 		}
 		
 		_.each(_.union(libs, testlibs), function(lib) {

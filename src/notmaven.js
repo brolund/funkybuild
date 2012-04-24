@@ -52,7 +52,7 @@
 	
 	mvn.resolvePom = function(pom2) {
 		var xmlDoc2 = xml.parseXmlString(pom2.trim());
-		return _.map(xmlDoc2.find("//dependencies/dependency"), function(dep){
+		return _.map(xmlDoc2.find("/project/dependencies/dependency"), function(dep){
 			return {
 				artifact:dep.get('./artifactId/text()').toString(),
 			 	group:dep.get('./groupId/text()').toString(), 
