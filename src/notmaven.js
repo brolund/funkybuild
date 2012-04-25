@@ -50,15 +50,29 @@
 		fileutils.wipeDirectory(mvn.localrepo);
 	}
 	
+	var getProperties = function(pom) {
+	    return _.reduce(pom.find("/project/properties/*"), function(memo, dep){
+	            memo[dep.name()]=dep.get('./text()');
+	            return memo;
+        }, {});
+	}
+	
+	var replaceProperties = function(text, properties) {
+	    _.templateSettings.interpolate = /\$\{(.+?)\}/g;
+	    var t = _.template(text);
+	    return t(properties);
+	}
+	
 	mvn.resolvePom = function(pom2) {
-		var xmlDoc2 = xml.parseXmlString(pom2.trim());
-		return _.map(xmlDoc2.find("/project/dependencies/dependency"), function(dep){
+		var xmlDoc = xml.parseXmlString(pom2.trim());
+		var properties = getProperties(xmlDoc);
+		return _.map(xmlDoc.find("/project/dependencies/dependency"), function(dep){
 			return {
-				artifact:dep.get('./artifactId/text()').toString(),
-			 	group:dep.get('./groupId/text()').toString(), 
-				version:dep.get('./version/text()').toString(),
-				type:defaultOnUndef(dep.get('./type/text()'), 'jar').toString(),
-				scope:defaultOnUndef(dep.get('./scope/text()'), 'compile').toString()
+				artifact:replaceProperties(dep.get('./artifactId/text()').toString(), properties),
+			 	group:replaceProperties(dep.get('./groupId/text()').toString(), properties), 
+				version:replaceProperties(dep.get('./version/text()').toString(), properties),
+				type:replaceProperties(defaultOnUndef(dep.get('./type/text()'), 'jar').toString(), properties),
+				scope:replaceProperties(defaultOnUndef(dep.get('./scope/text()'), 'compile').toString(), properties)
 			}});
 	}
 	
