@@ -58,9 +58,7 @@
 	}
 	
 	var replaceProperties = function(text, properties) {
-	    _.templateSettings.interpolate = /\$\{(.+?)\}/g;
-	    var t = _.template(text);
-	    return t(properties);
+	    return _.template(text, properties, {interpolate: /\$\{(.+?)\}/g});
 	}
 	
 	mvn.resolvePom = function(pom2) {
