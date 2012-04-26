@@ -15,32 +15,6 @@
 	//mvn.mavenrepo = {host:'mirrors.ibiblio.org', port:80, path:'/maven2/'};
 	mvn.mavenrepo = {host:'uk.maven.org', port:80, path:'/maven2/'};
 	
-	var getAndWrite = function(host, port, urlPath, localFileToWrite, cb) {
-		var options = {
-		  host: host,
-		  port: port,
-		  path: urlPath
-		};
-		console.log(options);
-		
-		http.get(options, function(res) {
-		  	console.log('Got response: ' + res.statusCode + ' for ' + options.path);
-			var fileopts = {flags: 'w',
-			  				encoding: null,
-		  					mode: 0666 };
-			var writeStream = fs.createWriteStream(localFileToWrite, fileopts);
-			res.on('data', function (chunk) {
-				writeStream.write(chunk, encoding='binary');
-		  	});
-			res.on('end', function () {
-				writeStream.on('close', function() {cb(null, localFileToWrite);});
-				writeStream.end();				
-		  	});
-		}).on('error', function(e) {
-			console.log("Got error: " + e.message);
-			cb(e, null);
-		});
-	}
 	
 	var defaultOnUndef = function(val, def) {
 		return val?val:def;
@@ -51,7 +25,7 @@
 	}
 	
 	var getProperties = function(pom) {
-	    return _.reduce(pom.find("/project/properties/*"), function(memo, dep){
+	    return _.reduce(pom.find('/project/properties/*'), function(memo, dep){
 	            memo[dep.name()]=dep.get('./text()');
 	            return memo;
         }, {});
@@ -61,10 +35,15 @@
 	    return _.template(text, properties, {interpolate: /\$\{(.+?)\}/g});
 	}
 	
-	mvn.resolvePom = function(pom2) {
-		var xmlDoc = xml.parseXmlString(pom2.trim());
+	var removeStupidNamespaces = function(xml) {
+	    return xml.replace(/\<project[^\>]*\>/, '<project>');
+	}
+	
+	mvn.resolvePom = function(pom) {
+		var xmlDoc = xml.parseXmlString(removeStupidNamespaces(pom));
 		var properties = getProperties(xmlDoc);
-		return _.map(xmlDoc.find("/project/dependencies/dependency"), function(dep){
+        _.each(xmlDoc.root().find('//dependency'), function(s){console.log('------', s.toString(), '------')});
+		return _.map(xmlDoc.find('.//dependencies/dependency'), function(dep){
 			return {
 				artifact:replaceProperties(dep.get('./artifactId/text()').toString(), properties),
 			 	group:replaceProperties(dep.get('./groupId/text()').toString(), properties), 
@@ -76,13 +55,29 @@
 	
 	mvn.resolveTransitiveDependencies = function(dep, cb) {
 		console.log('Resolving:', dep);
-		var returnedDep = {group:dep.group, artifact:dep.artifact, version:dep.version, type:defaultOnUndef(dep.type,'jar'), scope: defaultOnUndef(dep.scope,'compile'), dependencies:[]};
-		var pomDef = {group:dep.group, artifact:dep.artifact, version:dep.version, type:'pom', dependencies:[]};
+		
+		var returnedDep = {
+		    group: dep.group, 
+		    artifact: dep.artifact, 
+		    version: dep.version, 
+		    type: defaultOnUndef(dep.type,'jar'), 
+		    scope: defaultOnUndef(dep.scope,'compile'), 
+		    dependencies:[]};
+		
+		var pomDef = {
+		    group:dep.group, 
+		    artifact:dep.artifact, 
+		    version:dep.version, 
+		    type:'pom', 
+		    dependencies:[]};
+	
 		mvn.downloader(
 			pomDef, 
 			function(err, res) {
+			    console.log("Sub-resolving:", res);
 				var pomContents = fs.readFileSync(res, 'utf-8');
 				var subDependencies = mvn.resolvePom(pomContents);
+			    console.log("Sub-resolved deps:", subDependencies);
 				if(subDependencies.length==0) {
 					cb(null, returnedDep);
 					return;
@@ -103,9 +98,36 @@
 		});
 	}
 	
+	var getAndWrite = function(host, port, urlPath, localFileToWrite, cb) {
+		var options = {
+		  host: host,
+		  port: port,
+		  path: urlPath
+		};
+		console.log("Getting:", options);
+		
+		http.get(options, function(res) {
+		  	console.log('Got response: ' + res.statusCode + ' for ' + options.path);
+			var fileopts = {flags: 'w',
+			  				encoding: null,
+		  					mode: 0666 };
+			var writeStream = fs.createWriteStream(localFileToWrite, fileopts);
+			res.on('data', function (chunk) {
+				writeStream.write(chunk, encoding='binary');
+		  	});
+			res.on('end', function () {
+				writeStream.on('close', function() {cb(null, localFileToWrite);});
+				writeStream.end();				
+		  	});
+		}).on('error', function(e) {
+			console.log("Got error: " + e.message);
+			cb(e, null);
+		});
+	}
+	
 	mvn.downloader = function(dep, cb) {
 		var depFileName = dep.artifact + '-' + dep.version + '.' + dep.type;
-		console.log('Downloading', dep);
+		console.log('Downloading:', dep);
 		
 		console.log(dep.group);
 		var depSubDir = path.join(utils2.replaceAll(dep.group, '[\.]', '/'), dep.artifact, dep.version);
