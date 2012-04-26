@@ -42,7 +42,6 @@
 	mvn.resolvePom = function(pom) {
 		var xmlDoc = xml.parseXmlString(removeStupidNamespaces(pom));
 		var properties = getProperties(xmlDoc);
-        _.each(xmlDoc.root().find('//dependency'), function(s){console.log('------', s.toString(), '------')});
 		return _.map(xmlDoc.find('.//dependencies/dependency'), function(dep){
 			return {
 				artifact:replaceProperties(dep.get('./artifactId/text()').toString(), properties),
