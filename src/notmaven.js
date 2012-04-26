@@ -26,13 +26,9 @@
 	
 	var getProperties = function(pom) {
 	    return _.reduce(pom.find('/project/properties/*'), function(memo, dep){
-	            memo[dep.name()]=dep.get('./text()');
+	            memo.push([dep.name().toString(), dep.get('./text()')]);
 	            return memo;
-        }, {});
-	}
-	
-	var replaceProperties = function(text, properties) {
-	    return _.template(text, properties, {interpolate: /\$\{(.+?)\}/g});
+        }, []);
 	}
 	
 	var removeStupidNamespaces = function(xml) {
@@ -40,15 +36,25 @@
 	}
 	
 	mvn.resolvePom = function(pom) {
-		var xmlDoc = xml.parseXmlString(removeStupidNamespaces(pom));
-		var properties = getProperties(xmlDoc);
+	    var cleanPom = removeStupidNamespaces(pom);
+		var xmlDocWithProps = xml.parseXmlString(cleanPom);
+		var properties = getProperties(xmlDocWithProps);
+		var pomWithoutProperties = 
+		    _.reduce(properties, function(memo, prop) {
+		        var regexSafePropName = utils2.replaceAll(prop[0], '\\.', '\\.');
+		        memo = utils2.replaceAll(memo, '\\$\\{' +  regexSafePropName + '\\}', prop[1]);     
+		        return memo;
+		    }, cleanPom);
+		console.log(pomWithoutProperties);
+		var xmlDoc = xml.parseXmlString(pomWithoutProperties);
+		    
 		return _.map(xmlDoc.find('.//dependencies/dependency'), function(dep){
 			return {
-				artifact:replaceProperties(dep.get('./artifactId/text()').toString(), properties),
-			 	group:replaceProperties(dep.get('./groupId/text()').toString(), properties), 
-				version:replaceProperties(dep.get('./version/text()').toString(), properties),
-				type:replaceProperties(defaultOnUndef(dep.get('./type/text()'), 'jar').toString(), properties),
-				scope:replaceProperties(defaultOnUndef(dep.get('./scope/text()'), 'compile').toString(), properties)
+				artifact:dep.get('./artifactId/text()').toString(),
+			 	group:dep.get('./groupId/text()').toString(), 
+				version:dep.get('./version/text()').toString(),
+				type:defaultOnUndef(dep.get('./type/text()'), 'jar').toString(),
+				scope:defaultOnUndef(dep.get('./scope/text()'), 'compile').toString()
 			}});
 	}
 	

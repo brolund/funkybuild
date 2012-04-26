@@ -123,17 +123,19 @@ buster.testCase("Dependency download", {
 
 	"resolves properties": function () {
 		var deps = 
-		util.format(dependencyTemplate, '${group}', '${artifact}', '${version}', '${type}', '${scope}');
+		util.format(dependencyTemplate, '${group.val}', '${artifact}', '${version}', '${type}', '${scope}') +
+		util.format(dependencyTemplate, '${group.val}', '${artifact}', '${version}', '${type}', '${scope}');
 		var properties = 
-    		'<group>some-group</group>\
+    		'<group.val>some-group</group.val>\
     		<artifact>some-artifact</artifact>\
     		<version>some-version</version>\
     		<type>some-type</type>\
     		<scope>some-scope</scope>'
 		var pom = util.format(pomTemplate, properties, deps);
 		var result = nmvn.resolvePom(pom);
-		expect(result.length).toEqual(1);
+		expect(result.length).toEqual(2);
 		verifyDependency(result[0], 'some-group', 'some-artifact', 'some-version', 'some-type', 'some-scope'); 
+		verifyDependency(result[1], 'some-group', 'some-artifact', 'some-version', 'some-type', 'some-scope'); 
 	},
 	
 	
