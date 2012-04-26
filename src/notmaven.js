@@ -34,9 +34,9 @@
 	var removeStupidNamespaces = function(xml) {
 	    return xml.replace(/\<project[^\>]*\>/, '<project>');
 	}
-	
-	mvn.resolvePom = function(pom) {
-	    var cleanPom = removeStupidNamespaces(pom);
+
+	var cleanPomAndResolveProperties = function(pom) {
+	    	var cleanPom = removeStupidNamespaces(pom);
 		var xmlDocWithProps = xml.parseXmlString(cleanPom);
 		var properties = getProperties(xmlDocWithProps);
 		var pomWithoutProperties = 
@@ -46,7 +46,13 @@
 		        return memo;
 		    }, cleanPom);
 		console.log(pomWithoutProperties);
-		var xmlDoc = xml.parseXmlString(pomWithoutProperties);
+		return pomWithoutProperties;
+	}
+		
+	
+	mvn.resolvePom = function(pom) {
+		var cleanPom = cleanPomAndResolveProperties(pom);
+		var xmlDoc = xml.parseXmlString(cleanPom);
 		    
 		return _.map(xmlDoc.find('.//dependencies/dependency'), function(dep){
 			return {
