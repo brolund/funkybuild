@@ -48,20 +48,53 @@
 		console.log(pomWithoutProperties);
 		return pomWithoutProperties;
 	}
-		
 	
-	mvn.resolvePom = function(pom) {
+    mvn.resolveVersionFromMetadataFile = function(groupId, artifactId, cb) {
+        getAndWrite(
+            mvn.mavenrepo.host, 
+            mvn.mavenrepo.port,
+            path.join(mvn.mavenrepo.path,utils2.replaceAll(groupId, '\.', '/'),artifactId,'maven-metadata.xml'),
+            path.join(mvn.localrepo,utils2.replaceAll(groupId, '\.', '/'),artifactId,'maven-metadata.xml'),
+            function(err, metadataFileName){
+                if(err){cb(err);}
+                else {
+                    var dom = xml.parseXmlFile(metadataFileName);
+                    cb(null, dom.get('/metadata/versioning/release/text()'));
+                }
+        });
+    }
+	
+	mvn.resolvePom = function(pom, cb) {
 		var cleanPom = cleanPomAndResolveProperties(pom);
 		var xmlDoc = xml.parseXmlString(cleanPom);
-		    
-		return _.map(xmlDoc.find('.//dependencies/dependency'), function(dep){
-			return {
-				artifact:dep.get('./artifactId/text()').toString(),
-			 	group:dep.get('./groupId/text()').toString(), 
-				version:dep.get('./version/text()').toString(),
-				type:defaultOnUndef(dep.get('./type/text()'), 'jar').toString(),
-				scope:defaultOnUndef(dep.get('./scope/text()'), 'compile').toString()
-			}});
+		var dependencies = xmlDoc.find('.//dependencies/dependency');
+		
+		async.map(dependencies, function(dep, depCb) {
+		    var artifactId = dep.get('./artifactId/text()').toString();
+		    var groupId = dep.get('./groupId/text()').toString();
+		    var versionNr = dep.get('./version/text()');
+		    if(versionNr) {
+		        depCb(null, {
+                    artifact:artifactId,
+                    group:groupId, 
+                    version:versionNr.toString(),
+                    type:defaultOnUndef(dep.get('./type/text()'), 'jar').toString(),
+                    scope:defaultOnUndef(dep.get('./scope/text()'), 'compile').toString()
+                });
+            } else {
+		        mvn.resolveVersionFromMetadataFile(groupId, artifactId, function(err, resolvedVersionNr) {
+                    depCb(null, {
+                        artifact:artifactId,
+                        group:groupId, 
+                        version:resolvedVersionNr,
+                        type:defaultOnUndef(dep.get('./type/text()'), 'jar').toString(),
+                        scope:defaultOnUndef(dep.get('./scope/text()'), 'compile').toString()
+                    });
+                });
+            }
+        }, function(err, mappingResult) {
+            cb(err,mappingResult);
+        });
 	}
 	
 	mvn.resolveTransitiveDependencies = function(dep, cb) {
@@ -87,26 +120,30 @@
 			function(err, res) {
 			    console.log("Sub-resolving:", res);
 				var pomContents = fs.readFileSync(res, 'utf-8');
-				var subDependencies = mvn.resolvePom(pomContents);
-			    console.log("Sub-resolved deps:", subDependencies);
-				if(subDependencies.length==0) {
-					cb(null, returnedDep);
-					return;
-				}
-				async.map(
-					subDependencies, 
-					function(subDep, subCb) {
-						mvn.resolveTransitiveDependencies(subDep, function(err3, res3) {
-							subCb(err3, res3);
-						});
-					},
-					function(err2, res2) {
-						if(err2) {cb(err2);}
-						returnedDep.dependencies = res2;
-						cb(null, returnedDep);
-					}
-				);
-		});
+				mvn.resolvePom(pomContents, function(err, subDependencies){
+                    console.log("Sub-resolved deps:", subDependencies);
+                    if(subDependencies.length==0) {
+                        cb(null, returnedDep);
+                    } else {
+                        async.map(
+                            subDependencies, 
+                            function(subDep, subCb) {
+                                mvn.resolveTransitiveDependencies(subDep, function(err3, res3) {
+                                    subCb(err3, res3);
+                                });
+                            },
+                            function(err2, res2) {
+                                if(err2) {
+                                    cb(err2);
+                                    return;
+                                }
+                                returnedDep.dependencies = res2;
+                                cb(null, returnedDep);
+                            }
+                        );
+                    }				
+				});
+            });
 	}
 	
 	var getAndWrite = function(host, port, urlPath, localFileToWrite, cb) {
