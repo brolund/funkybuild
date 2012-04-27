@@ -45,7 +45,6 @@
 		        memo = utils2.replaceAll(memo, '\\$\\{' +  regexSafePropName + '\\}', prop[1]);     
 		        return memo;
 		    }, cleanPom);
-		console.log(pomWithoutProperties);
 		return pomWithoutProperties;
 	}
 	
@@ -53,12 +52,12 @@
         getAndWrite(
             mvn.mavenrepo.host, 
             mvn.mavenrepo.port,
-            path.join(mvn.mavenrepo.path,utils2.replaceAll(groupId, '\.', '/'),artifactId,'maven-metadata.xml'),
-            path.join(mvn.localrepo,utils2.replaceAll(groupId, '\.', '/'),artifactId,'maven-metadata.xml'),
+            path.join(mvn.mavenrepo.path,utils2.replaceAll(groupId, '\\.', '/'),artifactId,'maven-metadata.xml'),
+            path.join(mvn.localrepo,utils2.replaceAll(groupId, '\\.', '/'),artifactId,'maven-metadata.xml'),
             function(err, metadataFileName){
                 if(err){cb(err);}
                 else {
-                    var dom = xml.parseXmlFile(metadataFileName);
+                    var dom = xml.parseXmlString(fs.readFileSync(metadataFileName, 'utf-8'));
                     cb(null, dom.get('/metadata/versioning/release/text()'));
                 }
         });
@@ -70,8 +69,16 @@
 		var dependencies = xmlDoc.find('.//dependencies/dependency');
 		
 		async.map(dependencies, function(dep, depCb) {
-		    var artifactId = dep.get('./artifactId/text()').toString();
 		    var groupId = dep.get('./groupId/text()').toString();
+		    var artifactId = dep.get('./artifactId/text()').toString();
+		    if(groupId.indexOf('${')>-1) {
+		        depCb('Bad groupId '+ groupId + ' in pom:\n' + pom); 
+		        return;
+		    }
+		    if(artifactId.indexOf('${')>-1) {
+		        depCb('Bad artifactId '+ artifactId + ' in pom:\n' + pom); 
+		        return;
+		    }
 		    var versionNr = dep.get('./version/text()');
 		    if(versionNr) {
 		        depCb(null, {
@@ -97,7 +104,7 @@
         });
 	}
 	
-	mvn.resolveTransitiveDependencies = function(dep, cb) {
+	mvn.resolveTransitiveDependencies = function(dep, resolutionCallback) {
 		console.log('Resolving:', dep);
 		
 		var returnedDep = {
@@ -117,28 +124,27 @@
 	
 		mvn.downloader(
 			pomDef, 
-			function(err, res) {
-			    console.log("Sub-resolving:", res);
-				var pomContents = fs.readFileSync(res, 'utf-8');
-				mvn.resolvePom(pomContents, function(err, subDependencies){
-                    console.log("Sub-resolved deps:", subDependencies);
+			function(downloadError, downloadedFile) {
+			    if(downloadError) {resolutionCallback(downloadError); return;}
+			    console.log("Sub-resolving:", downloadedFile);
+				var pomContents = fs.readFileSync(downloadedFile, 'utf-8');
+				mvn.resolvePom(pomContents, function(subDependencyError, subDependencies){
+                    if(subDependencyError) {resolutionCallback(subDependencyError); return;}
                     if(subDependencies.length==0) {
-                        cb(null, returnedDep);
+                        resolutionCallback(null, returnedDep);
                     } else {
+                        console.log("Sub-resolved deps:", subDependencies);
                         async.map(
                             subDependencies, 
-                            function(subDep, subCb) {
-                                mvn.resolveTransitiveDependencies(subDep, function(err3, res3) {
-                                    subCb(err3, res3);
+                            function(subDep, subDepCallback) {
+                                mvn.resolveTransitiveDependencies(subDep, function(resolutionError, resolvedDependency) {
+                                    subDepCallback(resolutionError, resolvedDependency);
                                 });
                             },
-                            function(err2, res2) {
-                                if(err2) {
-                                    cb(err2);
-                                    return;
-                                }
-                                returnedDep.dependencies = res2;
-                                cb(null, returnedDep);
+                            function(asyncResolutionError, arrayOfResolvedDependencies) {
+                                if(asyncResolutionError) { resolutionCallback(asyncResolutionError); return;}
+                                returnedDep.dependencies = arrayOfResolvedDependencies;
+                                resolutionCallback(null, returnedDep);
                             }
                         );
                     }				
@@ -152,7 +158,7 @@
 		  port: port,
 		  path: urlPath
 		};
-		console.log("Getting:", options);
+		//console.log("Getting:", options);
 		
 		http.get(options, function(res) {
 		  	console.log('Got response: ' + res.statusCode + ' for ' + options.path);
