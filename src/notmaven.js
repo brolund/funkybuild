@@ -14,29 +14,29 @@
 	mvn.localrepo = process.env.HOME + '/.m2/funkyrepo/';
 	//mvn.mavenrepo = {host:'mirrors.ibiblio.org', port:80, path:'/maven2/'};
 	mvn.mavenrepo = {host:'uk.maven.org', port:80, path:'/maven2/'};
+	mvn.mavenrepourl = 'http://uk.maven.org:80/maven2/';
 	
 	
 	var defaultOnUndef = function(val, def) {
 		return val?val:def;
-	}
+	};
 	
 	mvn.cleanLocalRepository = function() {
 		fileutils.wipeDirectory(mvn.localrepo);
-	}
+	};
 	
 	var getProperties = function(pom) {
 	    return _.reduce(pom.find('/project/properties/*'), function(memo, dep){
 	            memo.push([dep.name().toString(), dep.get('./text()')]);
 	            return memo;
         }, []);
-	}
+	};
 	
 	var removeStupidNamespaces = function(xml) {
 	    return xml.replace(/\<project[^\>]*\>/, '<project>');
-	}
+	};
 
 	var cleanPomAndResolveProperties = function(pom) {
-	    	var cleanPom = removeStupidNamespaces(pom);
 		var xmlDocWithProps = xml.parseXmlString(cleanPom);
 		var properties = getProperties(xmlDocWithProps);
 		var pomWithoutProperties = 
@@ -48,26 +48,74 @@
 		return pomWithoutProperties;
 	}
 	
-    mvn.resolveVersionFromMetadataFile = function(groupId, artifactId, cb) {
+    mvn.resolveVersionFromParent = function(groupId, artifactId, parentGroupId, parentArtifactId, parentVersion, cb) {
+        var parentPomPath = path.join(
+                utils2.replaceAll(parentGroupId, '\\.', '/'),
+                parentArtifactId,
+                parentVersion,
+                parentArtifactId + '-' + parentVersion + '.pom');
+        fileutils.mkdir(
+        		path.join(
+        				mvn.localrepo, 
+        				utils2.replaceAll(parentGroupId, '\\.', '/'),
+        				parentArtifactId,
+        				parentVersion));
         getAndWrite(
             mvn.mavenrepo.host, 
             mvn.mavenrepo.port,
-            path.join(mvn.mavenrepo.path,utils2.replaceAll(groupId, '\\.', '/'),artifactId,'maven-metadata.xml'),
-            path.join(mvn.localrepo,utils2.replaceAll(groupId, '\\.', '/'),artifactId,'maven-metadata.xml'),
-            function(err, metadataFileName){
+            path.join(mvn.mavenrepo.path, parentPomPath),
+            path.join(mvn.localrepo, parentPomPath),
+            function(err, parentPomFileName){
                 if(err){cb(err);}
                 else {
-                    var dom = xml.parseXmlString(fs.readFileSync(metadataFileName, 'utf-8'));
-                    cb(null, dom.get('/metadata/versioning/release/text()'));
+                    var cleanPom = cleanPomAndResolveProperties(fs.readFileSync(parentPomFileName, 'utf-8'));
+                    console.log(cleanPom);
+                    var dom = xml.parseXmlString(cleanPom);
+                    var version = dom.get(
+                        "/project/dependencies/dependency[./artifactId/text()='" + artifactId + "']/version/text()")
+                    cb(null, version.toString());
                 }
-        });
+            }
+        );
     }
 	
+    mvn.resolvePomAncestory = function(pomDef /*{group:'group', artifact:'artifact', version:'version'}*/, 
+			fileContentsDownloader,
+			pomsSoFar,
+			fileContentsCallback) {
+    	var url = path.join(mvn.mavenrepourl, pomDef.group, pomDef.artifact, pomDef.version, pomDef.artifact + '-' + pomDef.version + '.pom' );
+    	fileContentsDownloader(url, function(err, res) {
+    		var cleanedPom = removeStupidNamespaces(res);
+    		var xmlPom = xml.parseXmlString(cleanedPom);
+    		pomsSoFar.push(xmlPom);
+    		if(xmlPom.get('/project/parent')) {
+    			var parentGroup = xmlPom.get('/project/parent/groupId/text()').toString();
+    			var parentArtifact = xmlPom.get('/project/parent/artifactId/text()').toString();
+    			var parentVersion = xmlPom.get('/project/parent/version/text()').toString();
+    			mvn.resolvePomAncestory(
+    					{group:parentGroup, artifact:parentArtifact, version:parentVersion}, 
+    					fileContentsDownloader,
+    					pomsSoFar,
+    					fileContentsCallback);
+    		} else {
+        		fileContentsCallback(null, pomsSoFar);
+    		}
+    	});
+    };
+    
 	mvn.resolvePom = function(pom, cb) {
-		var cleanPom = cleanPomAndResolveProperties(pom);
-		var xmlDoc = xml.parseXmlString(cleanPom);
+    	var parseablePom = removeStupidNamespaces(pom);
+		var xmlDoc = xml.parseXmlString(parseablePom);
+
+		if(xmlDoc.get('/project/parent')) {
+			var parentGroupId = xmlDoc.get('/project/parent/groupId/text()').toString();
+	        var parentArtifactId = xmlDoc.get('/project/parent/artifactId/text()').toString();
+	        var parentVersion = xmlDoc.get('/project/parent/version/text()').toString();
+	        console.log(parentGroupId, parentArtifactId, parentVersion);
+		}
+
 		var dependencies = xmlDoc.find('.//dependencies/dependency');
-		
+
 		async.map(dependencies, function(dep, depCb) {
 		    var groupId = dep.get('./groupId/text()').toString();
 		    var artifactId = dep.get('./artifactId/text()').toString();
@@ -89,15 +137,6 @@
                     scope:defaultOnUndef(dep.get('./scope/text()'), 'compile').toString()
                 });
             } else {
-		        mvn.resolveVersionFromMetadataFile(groupId, artifactId, function(err, resolvedVersionNr) {
-                    depCb(null, {
-                        artifact:artifactId,
-                        group:groupId, 
-                        version:resolvedVersionNr,
-                        type:defaultOnUndef(dep.get('./type/text()'), 'jar').toString(),
-                        scope:defaultOnUndef(dep.get('./scope/text()'), 'compile').toString()
-                    });
-                });
             }
         }, function(err, mappingResult) {
             cb(err,mappingResult);
@@ -119,11 +158,11 @@
 		    group:dep.group, 
 		    artifact:dep.artifact, 
 		    version:dep.version, 
-		    type:'pom', 
+		    type:'pom',
 		    dependencies:[]};
-	
+			
 		mvn.downloader(
-			pomDef, 
+			pomDef,
 			function(downloadError, downloadedFile) {
 			    if(downloadError) {resolutionCallback(downloadError); return;}
 			    console.log("Sub-resolving:", downloadedFile);

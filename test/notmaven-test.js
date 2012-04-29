@@ -21,11 +21,12 @@ xmlns=\"http://maven.apache.org/POM/4.0.0\"\
 xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\
 xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd\"\
 >\
-  <modelVersion>4.0.0</modelVersion>\
-  <groupId>group.id</groupId>\
-  <artifactId>artifact-id</artifactId>\
-  <version>1.2</version>\
-  <properties>\
+	<modelVersion>4.0.0</modelVersion>\
+	%s\
+	<groupId>group.id</groupId>\
+	<artifactId>artifact-id</artifactId>\
+	<version>1.2</version>\
+	<properties>\
   %s\
   </properties>\
   <dependencies>\
@@ -57,7 +58,9 @@ var verifyDependency = function(dep, group, artifact, version, type, scope) {
 	expect(dep.scope).toEqual(scope);
 }
 
-
+var noParent = '';
+var noProperties = '';
+var noDependencies = '';
 
 buster.testCase("Dependency download", {
     "get leaf dependency": function (done) {
@@ -75,7 +78,7 @@ buster.testCase("Dependency download", {
     },
     
 	"can resolve a pom without dependencies": function (done) {
-		nmvn.resolvePom(util.format(pomTemplate, '', ''), function(err, result) {
+		nmvn.resolvePom(util.format(pomTemplate, noParent, noProperties, noDependencies), function(err, result) {
 		        expect(result.length).toEqual(0);
 		        done();
 		});
@@ -84,7 +87,8 @@ buster.testCase("Dependency download", {
 	"can resolve a pom with a single dependency": function (done) {
 		var pom = util.format(
 		        pomTemplate, 
-		        '', 
+		        noParent, 
+		        noDependencies, 
 		        util.format(dependencyTemplate, 'group.id', 'artifact.id', '0.1.2', 'jar', 'scope'));
 
         nmvn.resolvePom(pom, function(err, result) {
@@ -98,7 +102,7 @@ buster.testCase("Dependency download", {
 		var deps = 
 			util.format(dependencyTemplate, 'group.id.1', 'artifact.id.1', '0.1', 'jar', 'some scope') + 
 			util.format(dependencyTemplate, 'group.id.2', 'artifact.id.2', '0.2', 'jar', 'some other scope');
-		var pom = util.format(pomTemplate, '', deps);
+		var pom = util.format(pomTemplate, noParent, noProperties, deps);
 
 		nmvn.resolvePom(pom, function(err, result) {
             expect(result.length).toEqual(2);
@@ -111,7 +115,7 @@ buster.testCase("Dependency download", {
 	"defaults type to jar and scope to compile": function (done) {
 		var deps = 
 			util.format(minimalDependencyTemplate, 'group.id.1', 'artifact.id.1', '0.1');
-		var pom = util.format(pomTemplate, '', deps);
+		var pom = util.format(pomTemplate, noParent, '', deps);
 
 		nmvn.resolvePom(pom, function(err, result){
             expect(result.length).toEqual(1);
@@ -134,6 +138,35 @@ buster.testCase("Dependency download", {
 			});
 	},	
 
+	"resolves pom ancestry": function (done) {
+		var index = -1;
+		var poms = [util.format(pomTemplate, 
+				"<parent>\
+					<artifactId>parentArtifact</artifactId>\
+					<groupId>parentGroup</groupId>\
+					<version>parentVersion</version>\
+				</parent>", noProperties, noDependencies), 
+				pomTemplate];
+		var urls = [path.join(nmvn.mavenrepourl, 'group', 'artifact', 'version', 'artifact-version.pom'), 
+		            path.join(nmvn.mavenrepourl, 'parentGroup', 'parentArtifact', 'parentVersion', 'parentArtifact-parentVersion.pom')];
+		
+		var downloader = function(url, contentsCallback) {
+			index++;
+			console.log("In downloader:", url, index);
+			expect(url).toMatch(urls[index]);
+			contentsCallback(null, poms[index]);
+		};
+		
+		nmvn.resolvePomAncestory({group:'group', artifact:'artifact', version:'version'}, 
+				downloader,
+				[],
+				function(err, res){
+			expect(res[0].get('/project/parent/artifactId')).toBeDefined();
+			refute.defined(res[1].get('/project/parent/artifactId'));
+			done();
+		});
+	},
+	
 	"resolves properties": function (done) {
 		var deps = 
 		    util.format(dependencyTemplate, '${group.val}', '${artifact}', '${version}', '${type}', '${scope}') +
@@ -146,7 +179,7 @@ buster.testCase("Dependency download", {
                 <type>some-type</type>\
                 <scope>some-scope</scope>';
 
-        var pom = util.format(pomTemplate, properties, deps);
+        var pom = util.format(pomTemplate, noParent, properties, deps);
 
 		nmvn.resolvePom(pom, function(err, result) {
             expect(result.length).toEqual(2);
