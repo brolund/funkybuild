@@ -15,6 +15,10 @@
 	    };
 	};
     
+	service.registerPromiseFunction = function(name, fn) {	    
+        service.services[name] = fn;
+	};
+	
     service.createNewContext = function() {
         return service.services;
     }    
