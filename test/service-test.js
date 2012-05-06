@@ -1,18 +1,29 @@
 var buster = require("buster");
+var assert = buster.assertions.assert,
+    refute = buster.assertions.refute,
+    expect = buster.assertions.expect;
 var service = require("./../src/service");
-var v = require("buster-assertions");
-var assert = v.assert,
-	refute = v.refute,
-	expect = v.expect;
+var when = require('when');
+
+var unexpectedErrback = function(error) {
+    console.log("Error:", error);
+    v.fail("Error shouldn't be called");
+}
+
 
 buster.testCase("Service provider", {
-    'stores callable service': function (done) {
-    	var service = service.create();
-    	var calls = 0;
-    	ctx.register('some name', function(){calls++;});
-    },
-
-    "states the obvious again": function () {
-        assert(true);
+    'stores plain ol function and creates promise': function (done) {     
+        var calls2 = 0;
+        service.registerFunction('some name', function(){calls2++;return 'some result';});
+        var ctx = service.createNewContext();
+        var res;
+        ctx['some name']().then(
+            function(result) {
+                res = result;
+            },
+            unexpectedErrback
+            );
+        expect(res).toEqual('some result'); 
+        done();
     }
 });

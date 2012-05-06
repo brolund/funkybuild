@@ -11,7 +11,4 @@ buster.testCase("utils", {
 		assert(true);
     },
 
-    "states the obvious again": function () {
-        assert(true);
-    }
 });
