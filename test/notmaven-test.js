@@ -166,7 +166,7 @@ buster.testCase("Dependency download", {
 			done();
 		});
 	},
-	
+	/*
 	"resolves properties": function (done) {
 		var deps = 
 		    util.format(dependencyTemplate, '${group.val}', '${artifact}', '${version}', '${type}', '${scope}') +
@@ -188,7 +188,7 @@ buster.testCase("Dependency download", {
             done();
 		});
 	},
-	
+    */	
 	
 
 });

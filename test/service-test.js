@@ -12,9 +12,8 @@ var unexpectedErrback = function(error) {
 
 
 buster.testCase("Service provider", {
-    'stores plain ol function and creates promise': function () {     
-        var calls2 = 0;
-        service.registerFunction('some name', function(){calls2++;return 'some result';});
+    'registers plain ol function and creates promise': function () {     
+        service.registerFunction('some name', function(){return 'some result';});
         var ctx = service.createNewContext();
         var res;
         ctx['some name']().then(function(result) {
@@ -23,10 +22,8 @@ buster.testCase("Service provider", {
         expect(res).toEqual('some result'); 
     },
     
-    'stores promise': function (done) {     
-        var calls = 0;
+    'registers promise function': function (done) {     
         var promiseFn = function(){
-            calls++;
             var deferred = when.defer();
             setTimeout(function() {
                deferred.resolve('deferred result');
@@ -39,6 +36,29 @@ buster.testCase("Service provider", {
                                     expect(result).toEqual('deferred result'); 
                                     done();
                                 }, unexpectedErrback);
-    }
+    },
+    
+    'provides registered functions access to registry as first argument': function() {
+        var ctx;
+        service.registerFunction('called function', 
+            function(localCtx) {
+                expect(localCtx).toEqual(ctx); 
+                return 'the result';
+            });
+
+        service.registerPromiseFunction('calling function', 
+            function(localCtx) {
+                expect(localCtx).toEqual(ctx); 
+                return localCtx['called function']();
+            });
+            
+        ctx = service.createNewContext();
+        ctx['called function']().then(function(result) {
+                                    expect(result).toEqual('the result'); 
+                                    done();
+                                }, unexpectedErrback);
+        
+    },     
+    
     
 });
