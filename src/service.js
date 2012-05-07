@@ -17,7 +17,7 @@
 	};
     
 	service.registerPromiseFunction = function(name, fn) {	    
-        service.services[name] = _.once(function() {return fn(service.services);});
+        service.services[name] = function() {return fn(service.services);};
 	};
 	
     service.createNewContext = function() {

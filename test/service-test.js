@@ -86,6 +86,38 @@ buster.testCase("Service provider", {
         
     }
     
+    'caches service results based on arguments': function(done) {
+        var calls = 0;
+        var arg1 = 'arg1';
+        var arg2 = 'arg2';
+
+        var promiseFn = function(a1, a2){
+            calls++;
+            expect(a1).toEqual(arg1); 
+            expect(a2).toEqual(arg2);
+             
+            var deferred = when.defer();
+            setTimeout(function() {
+               deferred.resolve('deferred result');
+            }, 1);
+            return deferred.promise;
+        };
+
+        service.registerPromiseFunction('promise name', promiseFn);
+
+        var ctx = service.createNewContext();
+
+        ctx['promise name'](arg1, arg2).then(function(result) {
+                                    expect(calls).toEqual(1); 
+                                }, unexpectedErrback);
+        
+        ctx['promise name'](arg2, arg1).then(function(result) {
+                                    expect(calls).toEqual(1); 
+                                    done();
+                                }, unexpectedErrback);
+        
+    }
+
     
 });
 
