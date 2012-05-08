@@ -2,7 +2,7 @@ var buster = require("buster");
 var assert = buster.assertions.assert,
     refute = buster.assertions.refute,
     expect = buster.assertions.expect;
-var service = require("./../src/service");
+var registry = require("./../src/service");
 var when = require('when');
 
 var unexpectedErrback = function(error) {
@@ -13,8 +13,8 @@ var unexpectedErrback = function(error) {
 
 buster.testCase("Service provider", {
     'registers plain ol function and creates promise': function () {     
-        service.registerFunction('some name', function(){return 'some result';});
-        var ctx = service.createNewContext();
+        registry.registerFunction('some name', function(){return 'some result';});
+        var ctx = registry.createNewContext();
         var res;
         ctx['some name']().then(function(result) {
                                     res = result;
@@ -30,8 +30,8 @@ buster.testCase("Service provider", {
             }, 1);
             return deferred.promise;
         };
-        service.registerPromiseFunction('promise name', promiseFn);
-        var ctx = service.createNewContext();
+        registry.registerPromiseFunction('promise name', promiseFn);
+        var ctx = registry.createNewContext();
         ctx['promise name']().then(function(result) {
                                     expect(result).toEqual('deferred result'); 
                                     done();
@@ -39,7 +39,7 @@ buster.testCase("Service provider", {
     },
     
     'provides registered functions access to registry as this.context': function(done) {
-        service.registerFunction('called function', 
+        registry.registerFunction('called function', 
             function() {
                 expect(this['called function']).toBeDefined(); 
                 return 'the result';
@@ -50,9 +50,9 @@ buster.testCase("Service provider", {
                 expect(this['calling function']).toBeDefined(); 
                 return this['called function']();
             }
-        service.registerPromiseFunction('calling function', promiseFn);
+        registry.registerPromiseFunction('calling function', promiseFn);
             
-        ctx = service.createNewContext();
+        ctx = registry.createNewContext();
         ctx['calling function']().then(function(result) {
                                     expect(result).toEqual('the result'); 
                                     done();
@@ -72,9 +72,9 @@ buster.testCase("Service provider", {
             return deferred.promise;
         };
 
-        service.registerPromiseFunction('promise name', promiseFn);
+        registry.registerPromiseFunction('promise name', promiseFn);
 
-        var ctx = service.createNewContext();
+        var ctx = registry.createNewContext();
 
         ctx['promise name']().then(function(result) {
                                     expect(calls).toEqual(1); 
@@ -104,9 +104,9 @@ buster.testCase("Service provider", {
             return deferred.promise;
         };
 
-        service.registerPromiseFunction('promise name', promiseFn);
+        registry.registerPromiseFunction('promise name', promiseFn);
 
-        var ctx = service.createNewContext();
+        var ctx = registry.createNewContext();
 
         ctx['promise name'](arg1, arg2).then(function(result) {
                                     expect(calls).toEqual(1); 
