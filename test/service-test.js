@@ -38,27 +38,28 @@ buster.testCase("Service provider", {
                                 }, unexpectedErrback);
     },
     
-    'provides registered functions access to registry as first argument': function(done) {
-        var ctx;
+    'provides registered functions access to registry as this.context': function(done) {
         service.registerFunction('called function', 
-            function(localCtx) {
-                expect(localCtx).toEqual(ctx); 
+            function() {
+                expect(this['called function']).toBeDefined(); 
                 return 'the result';
             });
 
-        service.registerPromiseFunction('calling function', 
-            function(localCtx) {
-                expect(localCtx).toEqual(ctx); 
-                return localCtx['called function']();
-            });
+        var promiseFn = function() {
+                console.log("This is:", this);
+                expect(this['calling function']).toBeDefined(); 
+                return this['called function']();
+            }
+        service.registerPromiseFunction('calling function', promiseFn);
             
         ctx = service.createNewContext();
-        ctx['called function']().then(function(result) {
+        ctx['calling function']().then(function(result) {
                                     expect(result).toEqual('the result'); 
                                     done();
                                 }, unexpectedErrback);        
     },     
-    
+
+/*    
     'caches service results': function(done) {
         var calls = 0;
 
@@ -84,7 +85,7 @@ buster.testCase("Service provider", {
                                     done();
                                 }, unexpectedErrback);
         
-    }
+    },
     
     'caches service results based on arguments': function(done) {
         var calls = 0;
@@ -117,7 +118,7 @@ buster.testCase("Service provider", {
                                 }, unexpectedErrback);
         
     }
-
+*/
     
 });
 
