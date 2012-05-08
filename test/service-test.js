@@ -14,9 +14,8 @@ var unexpectedErrback = function(error) {
 buster.testCase("Service provider", {
     'registers plain ol function and creates promise': function () {     
         registry.registerFunction('some name', function(){return 'some result';});
-        var ctx = registry.createNewContext();
         var res;
-        ctx['some name']().then(function(result) {
+        registry.services['some name']().then(function(result) {
                                     res = result;
                                 }, unexpectedErrback);
         expect(res).toEqual('some result'); 
@@ -31,8 +30,7 @@ buster.testCase("Service provider", {
             return deferred.promise;
         };
         registry.registerPromiseFunction('promise name', promiseFn);
-        var ctx = registry.createNewContext();
-        ctx['promise name']().then(function(result) {
+        registry.services['promise name']().then(function(result) {
                                     expect(result).toEqual('deferred result'); 
                                     done();
                                 }, unexpectedErrback);
@@ -52,8 +50,7 @@ buster.testCase("Service provider", {
             }
         registry.registerPromiseFunction('calling function', promiseFn);
             
-        ctx = registry.createNewContext();
-        ctx['calling function']().then(function(result) {
+        registry.services['calling function']().then(function(result) {
                                     expect(result).toEqual('the result'); 
                                     done();
                                 }, unexpectedErrback);        

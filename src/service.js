@@ -2,31 +2,27 @@
 	var when = require('when');
 	var _ = require('underscore');
 
-	var service = {};
+	var registry = {};
 	
 	module.exports = service;
 	
-	service.services = {};
+	registry.services = {};
 	
-	service.registerFunction = function(name, fn) {	 
-	    service.registerPromiseFunction(name,
+	registry.registerFunction = function(name, fn) {	 
+	    registry.registerPromiseFunction(name,
 	        function() {
     	        var deferred = when.defer(); 	  
-    	        deferred.resolve(_.bind(fn, service.services, arguments)()); 
+    	        deferred.resolve(_.bind(fn, registry.services, arguments)()); 
                 return deferred.promise;
             });
 	};
     
-	service.registerPromiseFunction = function(name, fn) {	    
+	registry.registerPromiseFunction = function(name, fn) {	    
         service.services[name] = 
             function() {
-                return _.bind(fn, service.services, arguments)();
+                return _.bind(fn, registry.services, arguments)();
             };
 	};
-	
-    service.createNewContext = function() {
-        return service.services;
-    }    
     	
 })();
 
