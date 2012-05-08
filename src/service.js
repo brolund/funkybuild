@@ -4,7 +4,7 @@
 
 	var registry = {};
 	
-	module.exports = service;
+	module.exports = registry;
 	
 	registry.services = {};
 	
@@ -18,7 +18,7 @@
 	};
     
 	registry.registerPromiseFunction = function(name, fn) {	    
-        service.services[name] = 
+        registry.services[name] = 
             function() {
                 return _.bind(fn, registry.services, arguments)();
             };
