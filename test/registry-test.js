@@ -2,7 +2,7 @@ var buster = require("buster");
 var assert = buster.assertions.assert,
     refute = buster.assertions.refute,
     expect = buster.assertions.expect;
-var registry = require("./../src/service");
+var registry = require("./../src/registry");
 var when = require('when');
 var _ = require('underscore');
 
