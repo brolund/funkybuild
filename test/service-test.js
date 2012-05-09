@@ -59,10 +59,10 @@ buster.testCase("Service provider", {
     },     
 
     'caches service results': function(done) {
-        var calls = [];
+        var callArgs = [];
 
         var promiseFn = function(a, b){
-            calls.push(a+b);
+            callArgs.push(a+b);
             var deferred = when.defer();
             _.delay(function() {
                deferred.resolve('deferred result');
@@ -75,11 +75,13 @@ buster.testCase("Service provider", {
         when.all(
             [regFn('a', 'b'),
              regFn('a', 'b'),
+             regFn('a', 'c'),
              regFn('b', 'a')])
         .then(function(results) {
+                    expect(callArgs.length).toEqual(_.uniq(callArgs).length); 
                     expect(results[0].toString()).toEqual('deferred result'); 
-                    expect(calls.length).toEqual(_.uniq(calls).length); 
-                    expect(results.length).toEqual(3); 
+                    expect(results.length).toEqual(4); 
+                    expect(_.uniq(results).length).toEqual(1); 
                     done();
                 }, unexpectedErrback);
         
