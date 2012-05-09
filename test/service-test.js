@@ -4,6 +4,7 @@ var assert = buster.assertions.assert,
     expect = buster.assertions.expect;
 var registry = require("./../src/service");
 var when = require('when');
+var _ = require('underscore');
 
 var unexpectedErrback = function(error) {
     console.log("Error:", error);
@@ -13,7 +14,9 @@ var unexpectedErrback = function(error) {
 
 buster.testCase("Service provider", {
     'registers plain ol function and creates promise': function () {     
-        registry.registerFunction('some name', function(){return 'some result';});
+        registry.registerFunction(
+            'some name', 
+            function(){return 'some result';});
         var res;
         registry.services['some name']().then(function(result) {
                                     res = result;
@@ -24,7 +27,7 @@ buster.testCase("Service provider", {
     'registers promise function': function (done) {     
         var promiseFn = function(){
             var deferred = when.defer();
-            setTimeout(function() {
+            _.delay(function() {
                deferred.resolve('deferred result');
             }, 1);
             return deferred.promise;
@@ -44,7 +47,6 @@ buster.testCase("Service provider", {
             });
 
         var promiseFn = function() {
-                console.log("This is:", this);
                 expect(this['calling function']).toBeDefined(); 
                 return this['called function']();
             }
@@ -56,66 +58,33 @@ buster.testCase("Service provider", {
                                 }, unexpectedErrback);        
     },     
 
-/*    
     'caches service results': function(done) {
-        var calls = 0;
+        var calls = [];
 
-        var promiseFn = function(){
-            calls++;
+        var promiseFn = function(a, b){
+            calls.push(a+b);
             var deferred = when.defer();
-            setTimeout(function() {
+            _.delay(function() {
                deferred.resolve('deferred result');
             }, 1);
             return deferred.promise;
         };
 
-        registry.registerPromiseFunction('promise name', promiseFn);
-
-        var ctx = registry.createNewContext();
-
-        ctx['promise name']().then(function(result) {
-                                    expect(calls).toEqual(1); 
-                                }, unexpectedErrback);
+        var regFn = registry.registerPromiseFunction('promise name', promiseFn);
         
-        ctx['promise name']().then(function(result) {
-                                    expect(calls).toEqual(1); 
-                                    done();
-                                }, unexpectedErrback);
+        when.all(
+            [regFn('a', 'b'),
+             regFn('a', 'b'),
+             regFn('b', 'a')])
+        .then(function(results) {
+                    expect(results[0].toString()).toEqual('deferred result'); 
+                    expect(calls.length).toEqual(_.uniq(calls).length); 
+                    expect(results.length).toEqual(3); 
+                    done();
+                }, unexpectedErrback);
         
     },
-    
-    'caches service results based on arguments': function(done) {
-        var calls = 0;
-        var arg1 = 'arg1';
-        var arg2 = 'arg2';
 
-        var promiseFn = function(a1, a2){
-            calls++;
-            expect(a1).toEqual(arg1); 
-            expect(a2).toEqual(arg2);
-             
-            var deferred = when.defer();
-            setTimeout(function() {
-               deferred.resolve('deferred result');
-            }, 1);
-            return deferred.promise;
-        };
-
-        registry.registerPromiseFunction('promise name', promiseFn);
-
-        var ctx = registry.createNewContext();
-
-        ctx['promise name'](arg1, arg2).then(function(result) {
-                                    expect(calls).toEqual(1); 
-                                }, unexpectedErrback);
-        
-        ctx['promise name'](arg2, arg1).then(function(result) {
-                                    expect(calls).toEqual(1); 
-                                    done();
-                                }, unexpectedErrback);
-        
-    }
-*/
     
 });
 
